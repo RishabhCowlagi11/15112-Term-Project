@@ -307,4 +307,4 @@ def game_redrawAll(app, canvas):
 def main():
     runApp(width = 600, height = 600)
 
-main()
+# main()
