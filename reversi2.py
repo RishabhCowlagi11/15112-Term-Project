@@ -9,6 +9,8 @@ def appStarted(app):
     app.mode = "game"
 
     app.baseColor = "gray"
+    app.color0 = "white"
+    app.color1 = "black"
 
     app.rows = 8
     app.cols = 8
@@ -17,12 +19,17 @@ def appStarted(app):
     app.boardWidth = app.width - app.margin * 2
     app.boardHeight = app.height - app.margin * 2
 
-    app.gameBoard = Board.Board(app.rows, app.cols)
-    app.gameBoard2 = Board.Board(app.rows, app.cols, boardColor = "pink", bgColor = "orange")
+    app.playerTurn = 0
+
+    app.gameBoardObject = Board.Board(app.rows, app.cols)
+    app.gameBoard = app.gameBoardObject.getBoard()
+    placeChipsOnBoard(app)
 
 ##################### USER INPUTS ######################
 def game_mousePressed(app, event):
-    pass
+    player = Chip.Chip((6, 6), app.playerTurn)
+    app.gameBoardObject.updateBoard(6, 6, player)
+    app.playerTurn = 1 - app.playerTurn
 
 def game_mouseMoved(app, event):
     pass
@@ -35,7 +42,7 @@ def home_keyPressed(app, event):
         appStarted(app)
 
 def home_mousePressed(app, event):
-    pass
+    print("ye", event.y)
 
 def home_mouseMoved(app, event):
     pass
@@ -49,6 +56,20 @@ def getCounts(app):
 
 def updateLegalSquares(app):
     pass
+
+def placeChipsOnBoard(app):
+    for row in range(len(app.gameBoard)):
+        for col in range(len(app.gameBoard[0])):
+            if((row, col) == (app.rows // 2, app.cols // 2) or
+               (row, col) == (app.rows // 2 - 1, app.cols // 2 - 1)):
+               chip = Chip.Chip((row, col), 0)
+            elif((row, col) == (app.rows // 2 - 1, app.cols // 2) or 
+                 (row, col) == (app.rows // 2, app.cols // 2 - 1)):
+                chip = Chip.Chip((row, col), 1)
+            else:
+                chip = Chip.Chip((row, col), None)
+            app.gameBoardObject.updateBoard(row, col, chip)
+    app.gameBoardObject.displayBoard()      
 
 ################## CHECKING FUNCTIONS ###################
 def isOnBoardXY(app, x, y):
@@ -77,7 +98,7 @@ def legalSquare(app, row, col, player):
 
 ###################### DRAWING FUNCTIONS ######################
 def drawError(app, canvas):
-    pass
+    canvas.create_rectangle(0, 0, app.width, app.height, fill = "red")
 
 def getIncrements(app):
     rowIncrement = app.boardHeight / app.rows
@@ -85,13 +106,27 @@ def getIncrements(app):
     return rowIncrement, colIncrement
 
 def drawHomePage(app, canvas):
-    pass
+    canvas.create_rectangle(0, 0, app.width, app.height, fill = "green")
+    # Add reversi image
+    centerX = app.width / 2
+    centerY = app.height / 2
+    xLen = app.width / 2
+    yLen = app.height / 10
+    buttonDiff = 15
+    player2Button = Button.Button(centerX, centerY, xLen, yLen,
+                                  text = "2 Player Reversi!!")
+    player1Button = Button.Button(centerX, centerY + yLen + buttonDiff, xLen, yLen,
+                                  text = "1 Player Reversi!!!")
+                                  
+    player2Button.drawRectangleButton(app, canvas)
+    player1Button.drawRectangleButton(app, canvas)
 
 def drawLegalSquares(app, canvas):
     pass
 
 def drawBoard(app, canvas):
-    app.gameBoard.drawInitialBoard(app, canvas)
+    app.gameBoardObject.drawBoard(app, canvas)
+    app.gameBoardObject.drawChips(app, canvas)
 
 def drawChip(app, canvas, row, col, color = "", outline = "", width = ""):
     pass

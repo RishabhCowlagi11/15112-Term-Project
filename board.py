@@ -1,4 +1,5 @@
-import reversi
+import reversi as Reversi
+import chip as Chip
 
 class Board:
     def __init__(self, rows, cols, boardColor = "green", bgColor = "gray"):
@@ -7,17 +8,24 @@ class Board:
         self.bgColor = bgColor
         self.boardColor = boardColor
         self.board = [[None] * self.cols for i in range(self.rows)]
+        self.chips = set()
 
     def updateBoard(self, row, col, player):
         self.board[row][col] = player
+        if(player.getColor() != None):
+            self.chips.add(player)
+
+    def getBoard(self):
+        return self.board
 
     def displayBoard(self):
-        print(self.board)
+        for i in self.board:
+            print(i)
 
-    def drawInitialBoard(self, app, canvas):
+    def drawBoard(self, app, canvas):
         canvas.create_rectangle(0, 0, app.width, app.height, fill = self.bgColor)
 
-        rowIncrement, colIncrement = reversi.getIncrements(app)
+        rowIncrement, colIncrement = Reversi.getIncrements(app)
         for row in range(self.rows):
             for col in range(self.cols):
                 canvas.create_rectangle(colIncrement * col + app.margin,
@@ -25,6 +33,16 @@ class Board:
                                         colIncrement * (col + 1) + app.margin, 
                                         rowIncrement * (row + 1) + app.margin,
                                         fill = self.boardColor, outline = "black")
+
+    def drawChips(self, app, canvas):
+        for row in range(len(self.board)):
+            for col in range(len(self.board[0])):
+                if(self.board[row][col] != None):
+                    chip = self.board[row][col]
+                    chip.drawChip(app, canvas)
+
+
+    
 
 
     
