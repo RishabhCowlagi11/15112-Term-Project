@@ -12,7 +12,9 @@ class Chip():
         return f"Chip @ {(self.location)} that is {self.color}"
 
     def __repr__(self):
-        return f"{type(self)}"
+        if(self.color == None):
+            return "-"
+        return f"{self.color}"
     
     def getLocation(self):
         return self.location

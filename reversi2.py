@@ -12,6 +12,9 @@ def appStarted(app):
     app.color0 = "white"
     app.color1 = "black"
 
+    app.countColor0 = 2
+    app.countColor1 = 2
+
     app.rows = 8
     app.cols = 8
 
@@ -25,11 +28,30 @@ def appStarted(app):
     app.gameBoard = app.gameBoardObject.getBoard()
     placeChipsOnBoard(app)
 
+    updateLegalSquares(app)
+
 ##################### USER INPUTS ######################
 def game_mousePressed(app, event):
-    player = Chip.Chip((6, 6), app.playerTurn)
-    app.gameBoardObject.updateBoard(6, 6, player)
-    app.playerTurn = 1 - app.playerTurn
+    rowWidth = app.boardHeight / app.rows 
+    colWidth = app.boardWidth / app.cols
+    
+    # If clicked square is on board, get its row and col
+    if(isOnBoardXY(app, event.x, event.y)):
+        clickedRow = int((event.y - app.margin) / rowWidth)
+        clickedCol = int((event.x - app.margin) / colWidth)
+
+
+    # Checks if square is legal, then places chip and changes turn
+    if(isOnBoardXY(app, event.x, event.y) and
+    legalSquare(app, clickedRow, clickedCol, app.playerTurn)):
+        app.gameBoardObject.updateGameBoard(clickedRow, clickedCol, app.playerTurn) 
+        flipPieces(app, clickedRow, clickedCol, app.playerTurn)
+        app.state, app.countColor0, app.countColor1 = getCounts(app)
+        app.playerTurn = 1 - app.playerTurn
+        app.gameBoardObject.displayBoard()
+        updateLegalSquares(app)
+    else:
+        app.error = True
 
 def game_mouseMoved(app, event):
     pass
@@ -42,7 +64,7 @@ def home_keyPressed(app, event):
         appStarted(app)
 
 def home_mousePressed(app, event):
-    print("ye", event.y)
+    pass
 
 def home_mouseMoved(app, event):
     pass
@@ -50,12 +72,41 @@ def home_mouseMoved(app, event):
 def home_mouseReleased(app, event):
     pass
 
+##################### UPDATE GAME #######################
+def flipPieces(app, row, col, player):
+    drow = [-1, 0, 1]
+    dcol = [-1, 0, 1]
+    for dr in drow:
+        for dc in dcol:
+            if(inDirection(app, row, col, dr, dc, player)):
+                print(row, col, dr, dc)
+                newRow, newCol = row + dr, col + dc
+                while(app.gameBoard[newRow][newCol].getColor() == 1 - player):
+                    app.gameBoardObject.updateGameBoard(newRow, newCol, player)
+                    newRow += dr
+                    newCol += dc
+
 #################### STATE FUNCTIONS ####################
 def getCounts(app):
-    pass
+    state, countColor0, countColor1 = 0, 0, 0
+    for i in range(app.rows):
+        for j in range(app.cols):
+            if(app.gameBoard[i][j].getColor() != None):
+                if(app.gameBoard[i][j].getColor() == 0):
+                    state -= 1
+                    countColor0 += 1
+                elif(app.gameBoard[i][j].getColor() == 1):
+                    state += 1
+                    countColor1 += 1
+
+    return state, countColor0, countColor1
 
 def updateLegalSquares(app):
-    pass
+    app.legalSquares = set()
+    for i in range(app.rows):
+        for j in range(app.cols):
+            if(legalSquare(app, i, j, app.playerTurn)):
+                app.legalSquares.add((i, j))
 
 def placeChipsOnBoard(app):
     for row in range(len(app.gameBoard)):
@@ -68,15 +119,20 @@ def placeChipsOnBoard(app):
                 chip = Chip.Chip((row, col), 1)
             else:
                 chip = Chip.Chip((row, col), None)
-            app.gameBoardObject.updateBoard(row, col, chip)
+            app.gameBoardObject.updateBoardWithObject(row, col, chip)
     app.gameBoardObject.displayBoard()      
 
 ################## CHECKING FUNCTIONS ###################
 def isOnBoardXY(app, x, y):
-    pass
+    if(x > app.margin and y > app.margin and 
+       x < app.width - app.margin and y < app.height - app.margin):
+        return True
+    return False
 
 def isOnBoardRowCol(app, row, col):
-    pass
+    if(0 <= row < app.rows and 0 <= col < app.cols):
+        return True
+    return False
 
 def is2PlayerButtonPressed(app, x, y):
     pass
@@ -85,16 +141,49 @@ def is1PlayerButtonPressed(app, x, y):
     pass
 
 def inDirection(app, row, col, drow, dcol, player):
-    pass
+    # Prevents Checking Same Square
+    if((drow, dcol) == (0, 0)):
+        return False
+
+    # Checks Intro Condition for Entering Loop
+    newRow, newCol = row + drow, col + dcol
+    if(not isOnBoardRowCol(app, newRow, newCol)):
+        return False
+
+    # Loops in Direction while new Square is of Opposite Color
+    # Return False if Loops outside of Board
+    while(app.gameBoard[newRow][newCol].getColor() == 1 - player):
+        if(isOnBoardRowCol(app, newRow + drow, newCol + dcol)):
+            newRow += drow
+            newCol += dcol
+        else:
+            return False
+
+    # If the Square that Breaks out of Loop is None return False else True
+    if(app.gameBoard[newRow][newCol].getColor() == None):
+        return False
+    return True
 
 def inLine(app, row, col, player):
-    pass
+    drow = [-1, 0, 1]
+    dcol = [-1, 0, 1]
+    for dr in drow:
+        for dc in dcol:
+            if(inDirection(app, row, col, dr, dc, player) and
+               app.gameBoard[row + dr][col + dc].getColor() == 1 - player):
+                # print(f"inLine() ... True in ({dr}, {dc})")
+                return True
+    return False
 
 def squareIsOpen(app, row, col):
-    pass
+    if(app.gameBoard[row][col].getColor() == None):
+        return True
+    return False
 
 def legalSquare(app, row, col, player):
-    pass
+    if(squareIsOpen(app, row, col) and inLine(app, row, col, player)):
+        return True
+    return False
 
 ###################### DRAWING FUNCTIONS ######################
 def drawError(app, canvas):
@@ -122,26 +211,30 @@ def drawHomePage(app, canvas):
     player1Button.drawRectangleButton(app, canvas)
 
 def drawLegalSquares(app, canvas):
-    pass
+    for row, col in app.legalSquares:
+        chip = Chip.Chip((row, col), outline = "tan", width = 5)
+        chip.drawChip(app, canvas)
 
 def drawBoard(app, canvas):
     app.gameBoardObject.drawBoard(app, canvas)
     app.gameBoardObject.drawChips(app, canvas)
 
-def drawChip(app, canvas, row, col, color = "", outline = "", width = ""):
-    pass
-
-def drawChips(app, canvas):
-    pass
-
 def drawScore(app, canvas):
-    pass
+    widthCenter = app.width / 2
+    heightCenter = app.height / 20
+    widthMargin = app.width / 8
+    heightMargin = app.height / 20
+    text = f"{app.color0} : {app.countColor0}\t{app.color1} : {app.countColor1}"
+    canvas.create_text(widthCenter, heightCenter, text = text,
+                       font = "Arial 28", anchor = "c")
 
 def home_redrawAll(app, canvas):
-    pass
+    drawHomePage(app, canvas)
 
 def game_redrawAll(app, canvas):
     drawBoard(app, canvas)
+    drawScore(app, canvas)
+    drawLegalSquares(app, canvas)
 
 def main():
     runApp(width = 600, height = 600)

@@ -10,10 +10,14 @@ class Board:
         self.board = [[None] * self.cols for i in range(self.rows)]
         self.chips = set()
 
-    def updateBoard(self, row, col, player):
+    def updateBoardWithObject(self, row, col, player):
         self.board[row][col] = player
         if(player.getColor() != None):
             self.chips.add(player)
+
+    def updateGameBoard(self, row, col, player):
+        chip = Chip.Chip((row, col), player)
+        self.board[row][col] = chip
 
     def getBoard(self):
         return self.board
