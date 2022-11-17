@@ -1,4 +1,4 @@
-# Importing modules
+    # Importing modules
 from cmu_112_graphics import *
 import board as Board
 import chip as Chip
@@ -6,7 +6,7 @@ import button as Button
 
 ##################### APP STARTED #####################
 def appStarted(app):
-    app.mode = "game"
+    app.mode = "home"
 
     app.baseColor = "gray"
     app.color0 = "white"
@@ -27,8 +27,13 @@ def appStarted(app):
     app.gameBoardObject = Board.Board(app.rows, app.cols)
     app.gameBoard = app.gameBoardObject.getBoard()
     placeChipsOnBoard(app)
+    
+    app.timerDelay = 1000000000000000000
 
     updateLegalSquares(app)
+
+    app.pause = False
+    app.error = False
 
 ##################### USER INPUTS ######################
 def game_mousePressed(app, event):
@@ -47,9 +52,12 @@ def game_mousePressed(app, event):
         app.gameBoardObject.updateGameBoard(clickedRow, clickedCol, app.playerTurn) 
         flipPieces(app, clickedRow, clickedCol, app.playerTurn)
         app.state, app.countColor0, app.countColor1 = getCounts(app)
-        app.playerTurn = 1 - app.playerTurn
-        app.gameBoardObject.displayBoard()
         updateLegalSquares(app)
+        if(app.playerTurn == 0):
+            print("RUNNING MINIMAX.....")
+            miniMax(app, 2)
+            app.playerTurn = 1 - app.playerTurn
+        app.playerTurn = 1 - app.playerTurn
     else:
         app.error = True
 
@@ -57,14 +65,21 @@ def game_mouseMoved(app, event):
     pass
 
 def game_mouseReleased(app, event):
-    pass
+    app.error = False
+
+def game_keyPressed(app, event):
+    if(event.key == "p"):
+        app.pause = not app.pause
 
 def home_keyPressed(app, event):
     if(event.key == "r"):
         appStarted(app)
 
 def home_mousePressed(app, event):
-    pass
+    if(is2PlayerButtonPressed(app, event.x, event.y)):
+        app.mode = "game"
+    elif(is1PlayerButtonPressed(app, event.x, event.y)):
+        app.mode = "game"
 
 def home_mouseMoved(app, event):
     pass
@@ -79,14 +94,42 @@ def flipPieces(app, row, col, player):
     for dr in drow:
         for dc in dcol:
             if(inDirection(app, row, col, dr, dc, player)):
-                print(row, col, dr, dc)
                 newRow, newCol = row + dr, col + dc
                 while(app.gameBoard[newRow][newCol].getColor() == 1 - player):
                     app.gameBoardObject.updateGameBoard(newRow, newCol, player)
                     newRow += dr
                     newCol += dc
 
+def miniMaxHelper(app):
+    pass
+
+# References
+# https://en.wikipedia.org/wiki/Minimax
+def miniMax(app, depth, isComputerTurn = True):
+    print(f"MINIMAX DEPTH is {depth}")
+    if(depth == 0):
+        print(f"RETURNING getState(app) = {getState(app)}")
+        return getState(app)
+    updateLegalSquares(app)
+    for i, j in app.legalSquares:
+        if(isComputerTurn):
+            print(f"PLACING FOR COMPUTER AT {(i, j)}")
+            app.gameBoardObject.updateGameBoard(i, j, 1)
+            app.gameBoardObject.displayBoard()
+            updateLegalSquares(app)
+        else:
+            print(f"PLACING FOR HUMAN AT {(i, j)}")
+            app.gameBoardObject.updateGameBoard(i, j, 0)
+            updateLegalSquares(app)
+        x = miniMax(app, depth - 1, not isComputerTurn)
+        print(f"RETURNING max of {getState(app)} and {x}")
+        return max(getState(app), x)
+    
+
 #################### STATE FUNCTIONS ####################
+def game_timerFired(app):
+    pass
+
 def getCounts(app):
     state, countColor0, countColor1 = 0, 0, 0
     for i in range(app.rows):
@@ -100,6 +143,9 @@ def getCounts(app):
                     countColor1 += 1
 
     return state, countColor0, countColor1
+
+def getState(app):
+    return getCounts(app)[0]
 
 def updateLegalSquares(app):
     app.legalSquares = set()
@@ -120,7 +166,6 @@ def placeChipsOnBoard(app):
             else:
                 chip = Chip.Chip((row, col), None)
             app.gameBoardObject.updateBoardWithObject(row, col, chip)
-    app.gameBoardObject.displayBoard()      
 
 ################## CHECKING FUNCTIONS ###################
 def isOnBoardXY(app, x, y):
@@ -135,10 +180,24 @@ def isOnBoardRowCol(app, row, col):
     return False
 
 def is2PlayerButtonPressed(app, x, y):
-    pass
+    centerX = app.width / 2
+    centerY = app.height / 2
+    xLen = app.width / 2
+    yLen = app.height / 10
+    if(centerX - xLen <= x <= centerX + xLen and
+       centerY - yLen <= y <= centerY + yLen):
+       return True
+    return False
 
 def is1PlayerButtonPressed(app, x, y):
-    pass
+    centerX = app.width / 2
+    xLen = app.width / 2
+    yLen = app.height / 10
+    centerY = app.height / 2 + yLen + 15
+    if(centerX - xLen <= x <= centerX + xLen and
+       centerY - yLen <= y <= centerY + yLen):
+       return True
+    return False
 
 def inDirection(app, row, col, drow, dcol, player):
     # Prevents Checking Same Square
@@ -171,7 +230,6 @@ def inLine(app, row, col, player):
         for dc in dcol:
             if(inDirection(app, row, col, dr, dc, player) and
                app.gameBoard[row + dr][col + dc].getColor() == 1 - player):
-                # print(f"inLine() ... True in ({dr}, {dc})")
                 return True
     return False
 
@@ -187,7 +245,8 @@ def legalSquare(app, row, col, player):
 
 ###################### DRAWING FUNCTIONS ######################
 def drawError(app, canvas):
-    canvas.create_rectangle(0, 0, app.width, app.height, fill = "red")
+    if(app.error):
+        canvas.create_rectangle(0, 0, app.width, app.height, fill = "red")
 
 def getIncrements(app):
     rowIncrement = app.boardHeight / app.rows
@@ -234,6 +293,7 @@ def home_redrawAll(app, canvas):
 def game_redrawAll(app, canvas):
     drawBoard(app, canvas)
     drawScore(app, canvas)
+    drawError(app, canvas)
     drawLegalSquares(app, canvas)
 
 def main():

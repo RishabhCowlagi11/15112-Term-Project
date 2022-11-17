@@ -1,5 +1,3 @@
-import reversi as Reversi
-
 class Chip():
     def __init__(self, location, color = None, outline = "", width = 0):
         self.row = location[0]
@@ -9,7 +7,7 @@ class Chip():
         self.width = width
 
     def __str__(self):
-        return f"Chip @ {(self.location)} that is {self.color}"
+        return f"Chip @ {(self.row, self.col)} that is {self.color}"
 
     def __repr__(self):
         if(self.color == None):
@@ -35,7 +33,8 @@ class Chip():
             color = app.color1
         else:
             color = ""
-        rowIncrement, colIncrement = Reversi.getIncrements(app)
+        rowIncrement = app.boardHeight / app.rows
+        colIncrement = app.boardWidth / app.cols
         margin = 5
         canvas.create_oval(app.margin + self.col * colIncrement + margin, 
                            app.margin + self.row * rowIncrement + margin,
