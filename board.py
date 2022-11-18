@@ -1,22 +1,29 @@
 import chip as Chip
+import legal as Legal
 
 class Board:
-    def __init__(self, rows, cols, boardColor = "green", bgColor = "gray"):
+    def __init__(self, rows, cols, boardColor = "green", bgColor = "gray",
+                 board = None):
         self.rows = rows
         self.cols = cols
         self.bgColor = bgColor
         self.boardColor = boardColor
-        self.board = [[None] * self.cols for i in range(self.rows)]
         self.chips = set()
+        if(board == None):
+            self.board = [[None] * self.cols for i in range(self.rows)]
+        else:
+            self.board = board
 
     def updateBoardWithObject(self, row, col, player):
         self.board[row][col] = player
         if(player.getColor() != None):
             self.chips.add(player)
 
-    def updateGameBoard(self, row, col, player):
+    def updateGameBoard(self, app, row, col, player):
         chip = Chip.Chip((row, col), player)
         self.board[row][col] = chip
+        Legal.Legal.flipPieces(row, col, player)
+        Board.updateLegalSquares(self, app, 1 - player)
 
     def getBoard(self):
         return self.board
@@ -44,8 +51,26 @@ class Board:
             for col in range(len(self.board[0])):
                 if(self.board[row][col].getColor() != None):
                     chip = self.board[row][col]
-                    print("drawing", chip)
+                    # print("drawing", chip)
                     chip.drawChip(app, canvas)
+
+    def updateLegalSquares(self, app, playerTurn):
+        result = set()
+        for i in range(app.rows):
+            for j in range(app.cols):
+                if(Legal.Legal.legalSquare(app, i, j, playerTurn)):
+                    result.add((i, j))
+        self.legalSquares = result
+
+    def getLegalSquares(self):
+        return self.legalSquares
+
+    def drawLegalSquares(self, app, canvas):
+        for row, col in self.legalSquares:
+            chip = Chip.Chip((row, col), outline = "tan", width = 5)
+            chip.drawChip(app, canvas)
+    
+
 
 
     
