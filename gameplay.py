@@ -43,6 +43,10 @@ class GamePlay:
         dcol = [-1, 0, 1]
         for dr in drow:
             for dc in dcol:
+                # print((dr, dc), "testing inDirect()....", GamePlay.inDirection(app, board, row, col, dr, dc, player))
+                # if(GamePlay.isOnBoardRowCol(app, row + dr, col + dc)):
+                #     print("player: ", player)
+                #     print((dr, dc), "testing board()....", str(board[row + dr][col + dc])) #.getColor() == 1 - player)
                 if(GamePlay.inDirection(app, board, row, col, dr, dc, player) and
                    board[row + dr][col + dc].getColor() == 1 - player):
                     return True
@@ -56,21 +60,28 @@ class GamePlay:
 
     @staticmethod
     def legalSquare(app, board, row, col, player):
+        # print("testing squareIsOpen().....", GamePlay.squareIsOpen(app, board, row, col))
+        # print("testing inLine()......", GamePlay.inLine(app, board, row, col, player))
         if(GamePlay.squareIsOpen(app, board, row, col) and 
            GamePlay.inLine(app, board, row, col, player)):
             return True
         return False
 
     @staticmethod
-    def flipPieces(app, board, row, col, player):
+    def flipPieces(app, boardObject, row, col, player):
+        # print("FUCK", player)
+        board = boardObject.getBoard()
+
         drow = [-1, 0, 1]
         dcol = [-1, 0, 1]
+
         for dr in drow:
             for dc in dcol:
-                if(GamePlay.inDirection(app, row, col, dr, dc, player)):
+                # print(f"inDirection({(dr, dc)}):", GamePlay.inDirection(app, board, row, col, dr, dc, player))
+                if(GamePlay.inDirection(app, board, row, col, dr, dc, player)):
                     newRow, newCol = row + dr, col + dc
                     while(board[newRow][newCol].getColor() == 1 - player):
                         # Fix Line Below
-                        app.gameBoardObject.updateGameBoard(app, newRow, newCol, player)
+                        boardObject.tempUpdateGameBoard(app, newRow, newCol, player)
                         newRow += dr
                         newCol += dc

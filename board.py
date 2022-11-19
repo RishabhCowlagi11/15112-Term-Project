@@ -1,5 +1,5 @@
 import chip as Chip
-import legal as Legal
+import gameplay as GamePlay
 
 class Board:
     def __init__(self, rows, cols, boardColor = "green", bgColor = "gray",
@@ -14,16 +14,24 @@ class Board:
         else:
             self.board = board
 
+    def __str__(self):
+        pass
+
     def updateBoardWithObject(self, row, col, player):
         self.board[row][col] = player
         if(player.getColor() != None):
             self.chips.add(player)
 
+    def tempUpdateGameBoard(self, app, row, col, player):
+        chip = Chip.Chip((row, col), player)
+        self.board[row][col] = chip
+
+    # Consider making this do all the things, but for now ignore
     def updateGameBoard(self, app, row, col, player):
         chip = Chip.Chip((row, col), player)
         self.board[row][col] = chip
-        Legal.Legal.flipPieces(row, col, player)
-        Board.updateLegalSquares(self, app, 1 - player)
+        GamePlay.GamePlay.flipPieces(app, self, row, col, player)
+        Board.updateLegalSquares(self, app, self.board, 1 - player)
 
     def getBoard(self):
         return self.board
@@ -39,14 +47,18 @@ class Board:
         colIncrement = app.boardWidth / app.cols
         for row in range(self.rows):
             for col in range(self.cols):
+                if(row == app.lastPlayedRow and col == app.lastPlayedCol):
+                    fill = "red"
+                else:
+                    fill = self.boardColor
                 canvas.create_rectangle(colIncrement * col + app.margin,
                                         rowIncrement * row + app.margin, 
                                         colIncrement * (col + 1) + app.margin, 
                                         rowIncrement * (row + 1) + app.margin,
-                                        fill = self.boardColor, outline = "black")
+                                        fill = fill, outline = "black")
 
     def drawChips(self, app, canvas):
-        print("Running drawChips()...")
+        # print("Running fuckBitches()...")
         for row in range(len(self.board)):
             for col in range(len(self.board[0])):
                 if(self.board[row][col].getColor() != None):
@@ -54,11 +66,12 @@ class Board:
                     # print("drawing", chip)
                     chip.drawChip(app, canvas)
 
-    def updateLegalSquares(self, app, playerTurn):
+    def updateLegalSquares(self, app, board, playerTurn):
+        # print("bitch")
         result = set()
-        for i in range(app.rows):
-            for j in range(app.cols):
-                if(Legal.Legal.legalSquare(app, i, j, playerTurn)):
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if(GamePlay.GamePlay.legalSquare(app, board, i, j, playerTurn)):
                     result.add((i, j))
         self.legalSquares = result
 

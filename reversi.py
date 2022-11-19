@@ -1,10 +1,10 @@
 # Importing modules
 from cmu_112_graphics import *
-import copy
+import copy, time
 import board as Board
 import chip as Chip
 import button as Button
-import legal as Legal
+import gameplay as GamePlay
 
 ##################### APP STARTED #####################
 def appStarted(app):
@@ -36,7 +36,10 @@ def appStarted(app):
     app.gameBoardObject = Board.Board(app.rows, app.cols)
     app.gameBoard = app.gameBoardObject.getBoard()
     placeChipsOnBoard(app)
-    app.gameBoardObject.updateLegalSquares(app, app.playerTurn)
+    app.gameBoardObject.updateLegalSquares(app, app.gameBoard,app.playerTurn)
+
+    app.lastPlayedRow = None
+    app.lastPlayedCol = None
     
     app.timerDelay = 1000000000000000000
 
@@ -54,19 +57,22 @@ def game_mousePressed(app, event):
     if(isOnBoardXY(app, event.x, event.y)):
         clickedRow = int((event.y - app.margin) / rowWidth)
         clickedCol = int((event.x - app.margin) / colWidth)
-
+    else:
+        return
 
     # Checks if square is legal, then places chip and changes turn
+    # print("Player: ", app.playerTurn)
+    # input()
+    # print("Testing isOnBoardXY().....", isOnBoardXY(app, event.x, event.y))
+    # print("Testing legalSquare().....", GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn))
     if(isOnBoardXY(app, event.x, event.y) and
-    Legal.Legal.legalSquare(app, clickedRow, clickedCol, app.playerTurn)):
-        app.gameBoardObject.updateGameBoard(app, clickedRow, clickedCol, app.playerTurn) 
-        flipPieces(app, clickedRow, clickedCol, app.playerTurn)
+    GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn)):
+        app.lastPlayedRow, app.lastPlayedCol = clickedRow, clickedCol
+        app.gameBoardObject.updateGameBoard(app, clickedRow, clickedCol, app.playerTurn)
+        # GamePlay.GamePlay.flipPieces(app, app.gameBoardObject, clickedRow, clickedCol, app.playerTurn)
         app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
         
         app.playerTurn = 1 - app.playerTurn          
-        if(app.playerTurn == 1 and app.miniMax):
-            print("RUNNING MINIMAX.....")
-            miniMax(app, 2, app.gameBoard, app.gameBoardObject.getLegalSquares())
     else:
         app.error = True
 
@@ -75,6 +81,10 @@ def game_mouseMoved(app, event):
 
 def game_mouseReleased(app, event):
     app.error = False
+    if(app.playerTurn == 1 and app.miniMax):
+            # print("RUNNING MINIMAX.....")
+            depth = 2
+            miniMax(app, depth, depth, app.gameBoard, app.gameBoardObject.getLegalSquares())
 
 def game_keyPressed(app, event):
     if(event.key == "p"):
@@ -126,14 +136,14 @@ def miniMaxHelper(app):
 #         print(f"RETURNING max of {getState(app)} and {x}")
 #         return max(getState(app), x)
 
-def miniMax(app, depth, board, legalSquares, isComputerTurn = True):
+def miniMax(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
     boardScore = 0
     move = None
 
     # Base Case
     if(depth == 0):
         return getState(app, board)
-    print("Legal Squares: ", legalSquares, depth)
+    # print("Legal Squares: ", legalSquares, depth)
     for i, j in legalSquares:
         # Creating new board instance to simulate the game
         # as to not directly change the gameBoard
@@ -141,30 +151,36 @@ def miniMax(app, depth, board, legalSquares, isComputerTurn = True):
                                      app.gameBoardObject.cols,
                                      board = copy.deepcopy(board))
 
-        print(f"simulatedBoard before at depth {depth}")
-        simulatedBoard.displayBoard()
+        # print(f"simulatedBoard before at depth {depth}")
+        # simulatedBoard.displayBoard()
 
         simulatedBoard.updateGameBoard(app, i, j, int(isComputerTurn))
 
-        print(f"simulatedBoard after at depth {depth}")
-        simulatedBoard.displayBoard()
+        # print(f"simulatedBoard after at depth {depth}")
+        # simulatedBoard.displayBoard()
 
         # Recursive call to get the game score of the remaining moves
-        result = miniMax(app, depth - 1, simulatedBoard.getBoard(),
+        result = miniMax(app, depth - 1, depth, simulatedBoard.getBoard(),
                          simulatedBoard.getLegalSquares(), not isComputerTurn)
 
         # Computer wants to maximize game score
         # Player wants to minimize game score
-        if(isComputerTurn and result > boardScore):
+        if(isComputerTurn and result >= boardScore):
             boardScore = result
             move = (i, j)
-        elif(result < boardScore):
+        elif(result <= boardScore):
             boardScore = result
             move = (i, j)
     
-    if(move != None):
-        print(f"would have placed at {move}")
-
+    if(move != None and depth == refDepth):
+        # From https://stackoverflow.com/questions/15472707/make-python-program-wait
+        time.sleep(1)
+        app.gameBoardObject.updateGameBoard(app, move[0], move[1], 1)
+        app.lastPlayedRow = move[0]
+        app.lastPlayedCol = move[1]
+        
+        app.playerTurn = 0
+    
     return boardScore
     
 
@@ -259,8 +275,14 @@ def drawHomePage(app, canvas):
 def drawLegalSquares(app, canvas):
     app.gameBoardObject.drawLegalSquares(app, canvas)
 
+def drawLastPlayed(app, canvas):
+    if(app.lastPlayedRow == None or app.lastPlayedCol == None):
+        return
+    else:
+        canvas.create_rectangle()
+
 def drawBoard(app, canvas):
-    print("drawingBoard")
+    # print("drawingBoard")
     # app.gameBoardObject.displayBoard()
     app.gameBoardObject.drawBoard(app, canvas)
     app.gameBoardObject.drawChips(app, canvas)
