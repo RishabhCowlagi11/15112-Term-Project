@@ -69,7 +69,6 @@ class GamePlay:
 
     @staticmethod
     def flipPieces(app, boardObject, row, col, player):
-        # print("FUCK", player)
         board = boardObject.getBoard()
 
         drow = [-1, 0, 1]

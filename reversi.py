@@ -83,7 +83,7 @@ def game_mouseReleased(app, event):
     app.error = False
     if(app.playerTurn == 1 and app.miniMax):
             # print("RUNNING MINIMAX.....")
-            depth = 2
+            depth = 4
             miniMax(app, depth, depth, app.gameBoard, app.gameBoardObject.getLegalSquares())
 
 def game_keyPressed(app, event):
