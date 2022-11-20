@@ -58,7 +58,7 @@ class Board:
                                         fill = fill, outline = "black")
 
     def drawChips(self, app, canvas):
-        # print("Running fuckBitches()...")
+        # print("Running drawChips()...")
         for row in range(len(self.board)):
             for col in range(len(self.board[0])):
                 if(self.board[row][col].getColor() != None):
@@ -67,7 +67,6 @@ class Board:
                     chip.drawChip(app, canvas)
 
     def updateLegalSquares(self, app, board, playerTurn):
-        # print("bitch")
         result = set()
         for i in range(len(board)):
             for j in range(len(board[0])):
