@@ -31,7 +31,7 @@ class Board:
         chip = Chip.Chip((row, col), player)
         self.board[row][col] = chip
         GamePlay.GamePlay.flipPieces(app, self, row, col, player)
-        Board.updateLegalSquares(self, app, self.board, 1 - player)
+        Board.updateLegalSquares(self, app, 1 - player)
 
     def getBoard(self):
         return self.board
@@ -55,10 +55,9 @@ class Board:
                                         rowIncrement * row + app.margin, 
                                         colIncrement * (col + 1) + app.margin, 
                                         rowIncrement * (row + 1) + app.margin,
-                                        fill = fill, outline = "black")
+                                        fill = fill, outline = "black", width = 2)
 
     def drawChips(self, app, canvas):
-        # print("Running fuckBitches()...")
         for row in range(len(self.board)):
             for col in range(len(self.board[0])):
                 if(self.board[row][col].getColor() != None):
@@ -66,12 +65,20 @@ class Board:
                     # print("drawing", chip)
                     chip.drawChip(app, canvas)
 
-    def updateLegalSquares(self, app, board, playerTurn):
-        # print("bitch")
+    def simulateLegalSquares(self, app, playerTurn):
         result = set()
         for i in range(len(board)):
             for j in range(len(board[0])):
                 if(GamePlay.GamePlay.legalSquare(app, board, i, j, playerTurn)):
+                    result.add((i, j))
+        return result
+
+
+    def updateLegalSquares(self, app, playerTurn):
+        result = set()
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                if(GamePlay.GamePlay.legalSquare(app, self.board, i, j, playerTurn)):
                     result.add((i, j))
         self.legalSquares = result
 
@@ -82,6 +89,37 @@ class Board:
         for row, col in self.legalSquares:
             chip = Chip.Chip((row, col), outline = "tan", width = 5)
             chip.drawChip(app, canvas)
+
+    def isGameOver(self, app):
+        if(self.boardIsFull()):
+            return True
+        elif(self.noMoreMoves(app)):
+            return True
+        return False
+
+    def boardIsFull(self):
+        for i in self.board:
+            for j in i:
+                if(j == None):
+                    return False
+        return True
+
+    def noMoreMoves(self):
+        if(len(self.legalSquare) == 0):
+            updateLegalSquares(self, app, 1 - playerTurn)
+            
+            if(len(self.legalSquares) == 0):
+                return True
+            updateLegalSquares(self, app, 1 - playerTurn)
+        
+        return False
+
+
+
+
+
+    
+
     
 
 
