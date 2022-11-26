@@ -1,7 +1,7 @@
 1) Figure out if minimax is working because right now its sucks, and if it is
    make it better.
-2) Implement the ending sequence
-    a) If one player has no more moves, the other gets to go
-    b) If neither player has any moves or if the board is full, end the game
-    c) Display winner
-3) 
+2) Look into avatars and other stuff for selection page
+3) OpenCV for avatars - its probably completely unattainable
+4) Sockets
+5) Tournament Mode?
+6) 

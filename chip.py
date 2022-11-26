@@ -1,5 +1,5 @@
 class Chip():
-    def __init__(self, location, color = None, outline = "", width = 0):
+    def __init__(self, location, color = None, outline = "black", width = 3):
         self.row = location[0]
         self.col = location[1]
         self.color = color
@@ -36,9 +36,9 @@ class Chip():
         rowIncrement = app.boardHeight / app.rows
         colIncrement = app.boardWidth / app.cols
         margin = 5
-        canvas.create_oval(app.margin + self.col * colIncrement + margin, 
-                           app.margin + self.row * rowIncrement + margin,
-                           app.margin + (self.col + 1) * colIncrement - margin,
-                           app.margin + (self.row + 1) * rowIncrement - margin,
+        canvas.create_oval(app.marginWidthLeft + self.col * colIncrement + margin, 
+                           app.marginHeightTop + self.row * rowIncrement + margin,
+                           app.marginWidthLeft + (self.col + 1) * colIncrement - margin,
+                           app.marginHeightTop + (self.row + 1) * rowIncrement - margin,
                            fill = color, outline = self.outline, width = self.width)
         

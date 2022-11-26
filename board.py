@@ -51,10 +51,10 @@ class Board:
                     fill = "red"
                 else:
                     fill = self.boardColor
-                canvas.create_rectangle(colIncrement * col + app.margin,
-                                        rowIncrement * row + app.margin, 
-                                        colIncrement * (col + 1) + app.margin, 
-                                        rowIncrement * (row + 1) + app.margin,
+                canvas.create_rectangle(colIncrement * col + app.marginWidthLeft,
+                                        rowIncrement * row + app.marginHeightTop, 
+                                        colIncrement * (col + 1) + app.marginWidthLeft, 
+                                        rowIncrement * (row + 1) + app.marginHeightTop,
                                         fill = fill, outline = "black", width = 2)
 
     def drawChips(self, app, canvas):

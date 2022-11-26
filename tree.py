@@ -17,3 +17,6 @@ class Tree:
 
     def removeChild(self, childIndex):
         self.children.pop(childIndex)
+
+    def addChildren(self, children):
+        self.children.extend(children)
