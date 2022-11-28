@@ -1,5 +1,5 @@
 class Chip():
-    def __init__(self, location, color = None, outline = "black", width = 3):
+    def __init__(self, location, color = None, outline = "black", width = 5):
         self.row = location[0]
         self.col = location[1]
         self.color = color

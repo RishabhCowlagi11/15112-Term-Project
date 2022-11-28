@@ -1,27 +1,84 @@
 # Importing modules
 from cmu_112_graphics import *
-import copy, time
+import copy, time, ast
 import board as Board
 import chip as Chip
-import button as Button
+from features import Button, Text
 import gameplay as GamePlay
+import person as Person
+import draw as Draw
 
 ##################### APP STARTED #####################
+def loginAppStarted(app):
+    app.mainImage = app.loadImage("othy.jpeg")
+
+    app.loginButton = Button(app.width / 4, app.height / 2, 
+                                    app.width / 3, app.height / 10,
+                                    text = "LOGIN", textFont = "Arial 26 bold underline")
+
+    app.signUpButton = Button(app.width - app.width / 4, app.height / 2,
+                                     app.width / 3, app.height / 10,
+                                     text = "SIGN UP", textFont = "Arial 26 bold underline")
+    
+    app.guestButton = Button(app.width / 2, app.height - app.height / 3,
+                                    app.width / 2, app.height / 10,
+                                    text = "Play as Guest",
+                                    textFont = "Arial 26 bold underline")
+
+def loginVerificationAppStarted(app):
+    app.loginError = False
+    app.userNameInput = Text(app.width - app.width / 3, app.height / 3,
+                             app.width / 3, app.height / 10,
+                             text = "")
+
+    app.passwordInput = Text(app.width - app.width / 3, app.height / 2,
+                             app.width / 3, app.height / 10,
+                             text = "")
+
+    app.submitLoginButton = Button(app.width / 2, app.height - app.height / 3,
+                                   app.width / 2, app.height / 15, text = "Login!!")
+
+    app.loginExitButton = Button(app.width / 10, app.height / 5,
+                                 app.width / 20, app.height / 20,
+                                 text = "X", bgColor = "red")
+
+def signUpAppStarted(app):
+    app.signUpTakenUser = False
+    app.invalidPassword = False
+
+    app.signUpName = Text(app.width - app.width / 3, app.height / 3,
+                          app.width / 3, app.height / 12,
+                          text = "")
+
+    app.signUpUserName = Text(app.width - app.width / 3, app.height / 2,
+                              app.width / 3, app.height / 12,
+                              text = "")
+
+    app.signUpPassword = Text(app.width - app.width / 3, app.height - app.height / 3,
+                              app.width / 3, app.height / 12,
+                              text = "")
+
+    app.submitSignUpButton = Button(app.width / 2, app.height - app.height / 5.5,
+                                    app.width / 2, app.height / 15, text = "Sign Up!!")
+
+    app.signUpExitButton = Button(app.width / 10, app.height / 5,
+                                  app.width / 20, app.height / 20,
+                                  text = "X", bgColor = "red")
+
 def homeAppStarted(app):
-    app.img = app.loadImage("oth.png")
-    app.img2 = app.loadImage("othy.jpeg")
+    app.mainImage = app.loadImage("othy.jpeg")
 
     app.verticalSpacing = app.height / 10 + 15
 
     # creates the buttons on the home page
-    app.player2Button = Button.Button(app.width / 2, app.height / 2, 
+    app.player2Button = Button(app.width / 2, app.height / 2, 
                                       app.width / 2, app.height / 10,
                                       text = "2 Player Othello!!!")
-    app.player1Button = Button.Button(app.width / 2, app.height / 2 + app.verticalSpacing,
+    app.player1Button = Button(app.width / 2, app.height / 2 + app.verticalSpacing,
                                       app.width / 2, app.height / 10,
                                       text = "1 Player Othello!!!")
 
-    app.tournamentButton = Button.Button(app.width / 2, app.height / 2 + 2 * app.verticalSpacing,
+    app.tournamentButton = Button(app.width / 2, app.height / 2 + 2 * app.verticalSpacing,
                                          app.width / 2, app.height / 10,
                                          text = "Tournament Othello!!!")
 
@@ -29,36 +86,40 @@ def homeAppStarted(app):
 
 
 def selectionAppStarted(app):
-    app.gameButton = Button.Button(app.width - app.width / 10, app.height - app.height / 20,
+    app.computerImage = app.loadImage("computer.jpg")
+    app.computer2 = app.loadImage("computer2.jpeg")
+    app.computer2 = app.scaleImage(app.computer2, 0.4)
+
+    app.gameButton = Button(app.width - app.width / 10, app.height - app.height / 20,
                                app.width / 6, app.height / 20, text = "Go To Game",
                                textFont = "Arial 20")
     
-    app.player1Left = Button.Button(app.width / 2 - app.width / 10,
-                                    app.height / 2 - app.height / 6 + app.height / 10 + 20,
-                                    app.width / 20, app.height / 30,
-                                    direct = 1, text = "", outlineWidth = 1)
+    app.player1Left = Button(app.width / 2 - app.width / 8,
+                             app.height / 2 - app.height / 6 + app.height / 10 + 20,
+                             app.width / 20, app.height / 30,
+                             direct = 1, text = "", outlineWidth = 1)
 
-    app.player1Right = Button.Button(app.width / 2 + app.width / 10,
-                                    app.height / 2 - app.height / 6 + app.height / 10 + 20,
-                                    app.width / 20, app.height / 30,
-                                    direct = -1, text = "", outlineWidth = 1)
+    app.player1Right = Button(app.width / 2 + app.width / 8,
+                              app.height / 2 - app.height / 6 + app.height / 10 + 20,
+                              app.width / 20, app.height / 30,
+                              direct = -1, text = "", outlineWidth = 1)
     
-    app.player2Left = Button.Button(app.width / 2 - app.width / 10,
-                                    app.height / 2 + app.height / 5 + 20,
-                                    app.width / 20, app.height / 30,
-                                    direct = 1, text = "", outlineWidth = 1)
+    app.player2Left = Button(app.width / 2 - app.width / 8,
+                             app.height / 2 + app.height / 5 + 20,
+                             app.width / 20, app.height / 30,
+                             direct = 1, text = "", outlineWidth = 1)
 
-    app.player2Right = Button.Button(app.width / 2 + app.width / 10,
-                                    app.height / 2 + app.height / 5 + 20,
-                                    app.width / 20, app.height / 30,
-                                    direct = -1, text = "", outlineWidth = 1)
+    app.player2Right = Button(app.width / 2 + app.width / 8,
+                              app.height / 2 + app.height / 5 + 20,
+                              app.width / 20, app.height / 30,
+                              direct = -1, text = "", outlineWidth = 1)
 
 def gameAppStarted(app):
     app.colors = ["White", "Black", "Green", "Blue", "Cyan", "Yellow", "Magenta",
                   "Purple", "Dark Blue", "Orange", "Dark Green"]
     # declare the default board and chip colors
     app.baseColor = "gray"
-    # app.boardColor = rgbString(0, 146, 106)
+
     app.boardColor = "green"
     app.colorIndex0 = 0
     app.colorIndex1 = 1
@@ -75,7 +136,7 @@ def gameAppStarted(app):
 
     # declare board dimensions
     app.marginWidthLeft = app.width / 24
-    app.marginWidthRight = app.width / 24
+    app.marginWidthRight = app.width / 4
     app.marginWidth = app.marginWidthLeft + app.marginWidthRight
 
     app.marginHeightTop = app.height / 15
@@ -84,6 +145,11 @@ def gameAppStarted(app):
 
     app.boardWidth = app.width - app.marginWidth
     app.boardHeight = app.height - app.marginHeight
+
+    # Sets the number of players playing
+    app.playerCount = 1
+    app.player1Name = "Player 1"
+    app.player2Name = "Computer"
 
     # player 0 make first move
     app.playerTurn = 0
@@ -99,17 +165,29 @@ def gameAppStarted(app):
 
 def appStarted(app):
     # game starts at home screen 
-    app.mode = "home"
-
+    app.mode = "login"
+    
+    loginAppStarted(app)
+    loginVerificationAppStarted(app)
+    signUpAppStarted(app)
     homeAppStarted(app)
     selectionAppStarted(app)
     gameAppStarted(app)
     
-    # probably ignore
-    app.pause = False
+    # Boolean State Variables
     app.gameOver = False
     app.error = False
     app.miniMax = True
+
+####################### BASIC IO #######################
+# From 15112 Class Notes Strings: Basic IO
+def readFile(path):
+    with open(path, "rt") as f:
+        return f.read()
+
+def writeFile(path, contents):
+    with open(path, "wt") as f:
+        f.write(contents)
 
 ##################### USER INPUTS ######################
 def game_mousePressed(app, event):
@@ -124,20 +202,27 @@ def game_mousePressed(app, event):
         return
 
     # Checks if square is legal, then places chip and changes turn
-    # print("Player: ", app.playerTurn)
-    # input()
-    # print("Testing isOnBoardXY().....", isOnBoardXY(app, event.x, event.y))
-    # print("Testing legalSquare().....", GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn))
     if(isOnBoardXY(app, event.x, event.y) and
     GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn)):
         app.lastPlayedRow, app.lastPlayedCol = clickedRow, clickedCol
         app.gameBoardObject.updateGameBoard(app, clickedRow, clickedCol, app.playerTurn)
-        # GamePlay.GamePlay.flipPieces(app, app.gameBoardObject, clickedRow, clickedCol, app.playerTurn)
         app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
         
-        app.playerTurn = 1 - app.playerTurn          
+        app.playerTurn = 1 - app.playerTurn       
+        updatePlayerOutline(app)
     else:
         app.error = True
+
+def updatePlayerOutline(app):
+    if(app.playerTurn == 1):
+        app.player2TurnButton.updateIsClicked(True)
+        app.player1TurnButton.updateIsClicked(False)
+    else:
+        app.player1TurnButton.updateIsClicked(True)
+        app.player2TurnButton.updateIsClicked(False)  
+
+    app.player1TurnButton.updateOutline()
+    app.player2TurnButton.updateOutline()
 
 def game_mouseReleased(app, event):
     app.error = False
@@ -159,6 +244,27 @@ def game_keyPressed(app, event):
 def selection_mousePressed(app, event):
     if(app.gameButton.isPressedRectangle(event.x, event.y)):
         app.mode = "game"
+        colorFill0, colorFill1 = "black", "black"
+        if(app.color0 == "Black" or app.color0.find("Dark") != -1):
+            colorFill0 = "white"
+        if(app.color1 == "Black" or app.color1.find("Dark") != -1):
+            colorFill1 = "white"
+
+        app.player1TurnButton = Text(app.width - app.marginWidthRight / 2, 
+                                     app.height / 3,
+                                     app.marginWidthRight / 1.2, app.height / 4,
+                                     text = app.player1Name, bgColor = app.color0,
+                                     fill = colorFill0)
+
+        app.player2TurnButton = Text(app.width - app.marginWidthRight / 2, 
+                                     app.height - app.height / 3,
+                                     app.marginWidthRight / 1.2, app.height / 4,
+                                     text = app.player2Name, bgColor = app.color1,
+                                     fill = colorFill1)
+
+        app.player1TurnButton.updateIsClicked(True)
+        app.player1TurnButton.updateOutline()
+
     elif(app.player1Left.isPressedTriangle(event.x, event.y)):
         app.colorIndex0 -= 1
         app.colorIndex0 %= len(app.colors)
@@ -194,16 +300,188 @@ def home_keyPressed(app, event):
 
 def home_mousePressed(app, event):
     if(app.player2Button.isPressedRectangle(event.x, event.y)):
-        app.mode = "selection"
+        app.playerCount = 2
+        app.player2Name = "Player 2"
+        app.mode = "login"
         app.miniMax = False
     elif(app.player1Button.isPressedRectangle(event.x, event.y)):
         app.mode = "selection"
+        app.playerCount = 1
         app.miniMax = True
 
+def clearTextBoxes(app):
+    textBoxes = [app.userNameInput, app.passwordInput, app.signUpName, 
+                 app.signUpUserName, app.signUpPassword]
+
+    for text in textBoxes:
+        text.clearText()
+
+def loginVerify_mousePressed(app, event):
+    if(app.userNameInput.isPressedRectangle(event.x, event.y)):
+        app.userNameInput.updateIsClicked(True)
+        app.passwordInput.updateIsClicked(False)
+    elif(app.passwordInput.isPressedRectangle(event.x, event.y)):
+        app.passwordInput.updateIsClicked(True)
+        app.userNameInput.updateIsClicked(False)
+    elif(app.loginExitButton.isPressedCircle(event.x, event.y)):
+        app.mode = "login"
+        clearTextBoxes(app)
+    elif(app.submitLoginButton.isPressedRectangle(event.x, event.y)):
+        user = app.userNameInput.getText()
+        password = app.passwordInput.getText()
+        # From 112 Class Notes: Strings
+        users = ast.literal_eval(readFile("userAndPass.txt"))
+        if(user in users and password == users[user]["password"]):
+            if(app.playerCount == 2):
+                app.mode = "selection"
+                app.player2Name = user
+            else:
+                app.mode = "home"
+                app.player1Name = user
+        else:
+            app.loginError = True
+
+        clearTextBoxes(app)
+    else:
+        app.userNameInput.updateIsClicked(False)
+        app.passwordInput.updateIsClicked(False)
+
+
+def getAction(event):
+    if(len(event) == 1):
+        return event
+    elif(event == "Space"):
+        return " "
+    elif(event == "BackSpace"):
+        return -1
+    elif(event == "Return" or event == "Enter"):
+        return False
+    else:
+        return ""
+
+def loginVerify_keyPressed(app, event):
+    if(app.userNameInput.getIsClicked()):
+        action = getAction(event.key)
+        if(isinstance(action, bool)):
+            app.userNameInput.updateIsClicked(action)
+        else:
+            app.userNameInput.updateText(action)
+    elif(app.passwordInput.getIsClicked()):
+        action = getAction(event.key)
+        if(isinstance(action, bool)):
+            app.passwordInput.updateIsClicked(action)
+        else:
+            app.passwordInput.updateText(action)
+
+def isValidPassword(app, password):
+    if(len(password) < 4):
+        return False
+    # special = {"!", "@", "#", "$", "%", "&", "^", "*", "(", ")",
+    #            "-", "+", "=", "{", "}", "[", "]", "|", "\\", ":",
+    #            ";", "'", "\"", "<", ",", ">", ".", "?", "/", "_",
+    #            "`", "~"}
+    app.num = False
+    app.letter = False
+    # app.special = False
+    app.upper = False
+    app.lower = False
+    for letter in password:
+        if(letter.isalpha()):
+            app.letter = True
+            if(letter.isupper()):
+                app.upper = True
+            elif(letter.islower()):
+                app.lower = True
+        elif(letter.isdigit()):
+            app.num = True
+        # elif(letter in special):
+        #     app.special = True
+
+    return app.num and app.letter and app.upper and app.lower
+
+def makeTrueSignUp(app, element):
+    app.signUpUserName.updateIsClicked(1 == element)
+    app.signUpPassword.updateIsClicked(2 == element)
+    app.signUpName.updateIsClicked(3 == element)
+    
+
+def signup_mousePressed(app, event):
+    if(app.signUpUserName.isPressedRectangle(event.x, event.y)):
+        makeTrueSignUp(app, 1)
+    elif(app.signUpPassword.isPressedRectangle(event.x, event.y)):
+        makeTrueSignUp(app, 2)
+    elif(app.signUpName.isPressedRectangle(event.x, event.y)):
+        makeTrueSignUp(app, 3)
+    elif(app.signUpExitButton.isPressedCircle(event.x, event.y)):
+        app.mode = "login"
+        clearTextBoxes(app)
+    elif(app.submitSignUpButton.isPressedRectangle(event.x, event.y)):
+        user = app.signUpUserName.getText()
+        password = app.signUpPassword.getText()
+        if(not isValidPassword(app, password)):
+            app.invalidPassword = True
+        # REFERENCE: 112 Class Notes: Strings
+        users = ast.literal_eval(readFile("userAndPass.txt"))
+        if(user in users):
+            app.signUpTakenUser = True
+        elif(isValidPassword(app, password)):
+            personAttributes = {
+                "name": app.signUpName.getText(),
+                "username": user,
+                "password": password
+            }
+            users[user] = personAttributes
+            writeFile("userAndPass.txt", repr(users))
+            if(app.playerCount == 2):
+                app.mode = "selection"
+                app.player2Name = user
+            else:
+                app.player1Name = user
+                app.mode = "home"
+
+            clearTextBoxes(app)
+    else:
+        makeTrueSignUp(app, -1)
+
+
+def signup_keyPressed(app, event):
+    if(app.signUpUserName.getIsClicked()):
+        action = getAction(event.key)
+        if(isinstance(action, bool)):
+            app.signUpUserName.updateIsClicked(action)
+        else:
+            app.signUpUserName.updateText(action)
+    elif(app.signUpPassword.getIsClicked()):
+        action = getAction(event.key)
+        if(isinstance(action, bool)):
+            app.signUpPassword.updateIsClicked(action)
+        else:
+            app.signUpPassword.updateText(action)
+    elif(app.signUpName.getIsClicked()):
+        action = getAction(event.key)
+        if(isinstance(action, bool)):
+            app.signUpName.updateIsClicked(action)
+        else:
+            app.signUpName.updateText(action)
+        
+
+def login_mousePressed(app, event):
+    if(app.loginButton.isPressedRectangle(event.x, event.y)):
+        app.mode = "loginVerify"
+    elif(app.signUpButton.isPressedRectangle(event.x, event.y)):
+        app.mode = "signup"
+    elif(app.guestButton.isPressedRectangle(event.x, event.y)):
+        if(app.playerCount == 2):
+            app.mode = "selection"
+        else:
+            app.mode = "home"
 
 ##################### UPDATE GAME #######################
-# References
-# https://en.wikipedia.org/wiki/Minimax
+# REFERENCES
+# https://en.wikipedia.org/wiki/minimax
+# https://en.wikipedia.org/wiki/Alpha–beta_pruning
+# https://www.youtube.com/watch?v=l-hh51ncgDI
+# 112 Fundamentals of Game AI
 # TA Lecture on Game AI
 def miniMax(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
     boardScore = 0
@@ -236,11 +514,13 @@ def miniMax(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
             move = (i, j)
     
     if(move != None and depth == refDepth):
-        time.sleep(0.3)
+        # https://codeinstitute.net/global/blog/how-to-wait-in-python/
+        time.sleep(0.3) # Create some formula to calculate this
         app.gameBoardObject.updateGameBoard(app, move[0], move[1], 1)
         app.lastPlayedRow = move[0]
         app.lastPlayedCol = move[1]
         app.playerTurn = 0
+        updatePlayerOutline(app)
     
     return boardScore
 
@@ -282,105 +562,41 @@ def isOnBoardXY(app, x, y):
         return True
     return False
 
-###################### DRAWING FUNCTIONS ######################
-def drawError(app, canvas):
-    if(app.error and not app.gameOver):
-        canvas.create_rectangle(0, 0, app.width, app.height, fill = "red")
+######################## REDRAW ALL ########################
 
-def getIncrements(app):
-    rowIncrement = app.boardHeight / app.rows
-    colIncrement = app.boardWidth / app.cols
-    return rowIncrement, colIncrement
+def signup_redrawAll(app, canvas):
+    Draw.Login.drawLoginPage(app, canvas)
+    Draw.SignUp.drawSignUp(app, canvas)
+    if(app.signUpTakenUser):
+        Draw.SignUp.drawUserTaken(app, canvas)
+    if(app.invalidPassword):
+        Draw.SignUp.drawInvalidPassword(app, canvas)
 
-def drawSelectionPage(app, canvas):
-    canvas.create_rectangle(0, 0, app.width, app.height, fill = app.boardColor)
-    
-    canvas.create_text(app.width / 2, app.height / 20, text = "Color Selection",
-                       fill = "black", font = "Arial 36 bold underline", anchor = "c")
+def loginVerify_redrawAll(app, canvas):
+    Draw.Login.drawLoginPage(app, canvas)
+    Draw.LoginVerification.drawLoginVerification(app, canvas)
+    if(app.loginError):
+        Draw.LoginVerification.drawLoginError(app, canvas)
 
-    # Draw the selection for player 1
-    centerX = app.width / 2
-    centerY = app.height / 2 - app.height / 6
-    marginX = app.width / 8
-    marginY = app.height / 10
-    canvas.create_rectangle(centerX - marginX, centerY - marginY,
-                            centerX + marginX, centerY + marginY, 
-                            fill = app.color0, outline = "black", width = 5)
-
-    canvas.create_text(centerX, centerY + marginY + 20, text = "Player 1",
-                       font = "Arial 28 bold",  fill = "Black", anchor = "c")
-    
-    # Draw the selection for player 2
-    centerY = app.height / 2 + app.height / 10
-    canvas.create_rectangle(centerX - marginX, centerY - marginY,
-                            centerX + marginX, centerY + marginY, 
-                            fill = app.color1, outline = "black", width = 5)
-
-    canvas.create_text(centerX, centerY + marginY + 20, text = "Player 2",
-                       font = "Arial 28 bold", fill = "black", anchor = "c")
-
-    app.gameButton.drawRectangleButton(app, canvas)
-
-    app.player1Left.drawTriangleButton(app, canvas)
-    app.player1Right.drawTriangleButton(app, canvas)
-
-    app.player2Left.drawTriangleButton(app, canvas)
-    app.player2Right.drawTriangleButton(app, canvas)
-
-
-
-def drawHomePage(app, canvas):
-    canvas.create_rectangle(0, 0, app.width, app.height, fill = "green")
-    croppedImg = app.img.crop((170, 35, 860, 250))
-    croppedImg = app.img2.crop((0, 30, 720, 205))
-    canvas.create_image(app.width / 2, app.height / 2 - 225, image = ImageTk.PhotoImage(croppedImg))                   
-    
-    app.player2Button.drawRectangleButton(app, canvas)
-    app.player1Button.drawRectangleButton(app, canvas)
-
-    app.tournamentButton.drawRectangleButton(app, canvas)
-
-def drawLegalSquares(app, canvas):
-    app.gameBoardObject.drawLegalSquares(app, canvas)
-
-def drawBoard(app, canvas):
-    app.gameBoardObject.drawBoard(app, canvas)
-    app.gameBoardObject.drawChips(app, canvas)
-
-def drawScore(app, canvas):
-    widthCenter = app.width / 2
-    heightCenter = app.height / 22
-    text = f"{app.color0} : {app.countColor0}\t\t{app.color1} : {app.countColor1}"
-    canvas.create_text(widthCenter, heightCenter, text = text,
-                       font = f"Arial {app.fontSize}", anchor = "c")
-
-def drawGameOver(app, canvas):
-    canvas.create_rectangle(0, app.height / 3, app.width, app.height - app.height / 3,
-                            fill = "green", outline = "black", width = 5)
-    if(app.countColor0 > app.countColor1):
-        text = f"{app.color0} Wins!!!\nPress 'r' to play again"
-    elif(app.countColor0 < app.countColor1):
-        text = f"{app.color1} Wins!!!\nPress 'r' to play again"
-    else:
-        text = "Tie!!\nPress'r' to play again"
-    canvas.create_text(app.width / 2, app.height / 2, text = text,
-                       font = "Arial 28", anchor = "c")
+def login_redrawAll(app, canvas):
+    Draw.Login.drawLoginPage(app, canvas)
 
 def home_redrawAll(app, canvas):
-    drawHomePage(app, canvas)
-
-def game_redrawAll(app, canvas):
-    drawBoard(app, canvas)
-    drawScore(app, canvas)
-    drawLegalSquares(app, canvas)
-    drawError(app, canvas)
-    if(app.gameOver):
-        drawGameOver(app, canvas)
+    Draw.Home.drawHomePage(app, canvas)
 
 def selection_redrawAll(app, canvas):
-    drawSelectionPage(app, canvas)
+    Draw.Selection.drawSelectionPage(app, canvas)
+
+def game_redrawAll(app, canvas):
+    Draw.Game.drawBoard(app, canvas)
+    Draw.Game.drawScore(app, canvas)
+    Draw.Game.drawLegalSquares(app, canvas)
+    Draw.Game.drawGameButton(app, canvas)
+    Draw.Game.drawError(app, canvas)
+    if(app.gameOver):
+        Draw.Game.drawGameOver(app, canvas)
 
 def main():
-    runApp(width = 800, height = 800, title = "Othello")
+    runApp(width = 1100, height = 800, title = "Othello")
 
 main()
