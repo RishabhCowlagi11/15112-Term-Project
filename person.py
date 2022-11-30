@@ -1,5 +1,5 @@
 class Person():
-    def __init__(self, name, userName, password, wins):
+    def __init__(self, name, userName, password, wins = 0):
         self.name = name
         self.userName = userName
         self.password = password

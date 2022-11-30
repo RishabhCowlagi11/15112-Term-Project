@@ -4,4 +4,6 @@
 3) OpenCV for avatars - its probably completely unattainable
 4) Sockets
 5) Tournament Mode?
-6) 
+6) Isometric View
+7) Help Screen
+8) Undo Button?

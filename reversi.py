@@ -10,6 +10,7 @@ import draw as Draw
 
 ##################### APP STARTED #####################
 def loginAppStarted(app):
+    # Link: https://psdeals.net/id-store/game/1205152/othello-full-game
     app.mainImage = app.loadImage("othy.jpeg")
 
     app.loginButton = Button(app.width / 4, app.height / 2, 
@@ -66,6 +67,7 @@ def signUpAppStarted(app):
                                   text = "X", bgColor = "red")
 
 def homeAppStarted(app):
+    # Link: https://psdeals.net/id-store/game/1205152/othello-full-game
     app.mainImage = app.loadImage("othy.jpeg")
 
     app.verticalSpacing = app.height / 10 + 15
@@ -84,12 +86,15 @@ def homeAppStarted(app):
 
     app.fontSize = int(app.width / 30)
 
+def confirmAppStarted(app):
+    app.confirmButton = Button(app.width / 2, app.height - 13.5 * app.height / 36,
+                               app.width / 5, app.height / 20, text = "Confirm")
+
+    app.confirmExitButton = Button(13 * app.width / 36, 13.5 * app.height / 36,
+                                   app.width / 15, app.height / 20, text = "X",
+                                   bgColor = "white", fill = "red")
 
 def selectionAppStarted(app):
-    app.computerImage = app.loadImage("computer.jpg")
-    app.computer2 = app.loadImage("computer2.jpeg")
-    app.computer2 = app.scaleImage(app.computer2, 0.4)
-
     app.gameButton = Button(app.width - app.width / 10, app.height - app.height / 20,
                                app.width / 6, app.height / 20, text = "Go To Game",
                                textFont = "Arial 20")
@@ -160,19 +165,35 @@ def gameAppStarted(app):
     placeChipsOnBoard(app)
     app.gameBoardObject.updateLegalSquares(app, app.playerTurn)
 
+    app.helpButton = Button(app.width - app.width / 25, app.height / 20,
+                            app.width / 8, app.height / 15,
+                            text = "?", bgColor = "white", fill = "black",
+                            textFont = f"Arial {app.fontSize} bold")
+
     app.lastPlayedRow = None
     app.lastPlayedCol = None
 
+def helpAppStarted(app):
+    app.slide1 = True
+    app.timerDelay = 1500
+    app.helpExitButton = Button(app.width / 200 + app.width / 30,
+                                app.height / 10 + app.height / 23,
+                                app.width / 15, app.height / 15, text = "X",
+                                fill = "red", bgColor = "white",
+                                textFont = "Arial 36 bold")
+
 def appStarted(app):
-    # game starts at home screen 
+    # game starts at login screen 
     app.mode = "login"
     
     loginAppStarted(app)
     loginVerificationAppStarted(app)
     signUpAppStarted(app)
+    confirmAppStarted(app)
     homeAppStarted(app)
     selectionAppStarted(app)
     gameAppStarted(app)
+    helpAppStarted(app)
     
     # Boolean State Variables
     app.gameOver = False
@@ -181,6 +202,7 @@ def appStarted(app):
 
 ####################### BASIC IO #######################
 # From 15112 Class Notes Strings: Basic IO
+# Link: https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
 def readFile(path):
     with open(path, "rt") as f:
         return f.read()
@@ -189,10 +211,19 @@ def writeFile(path, contents):
     with open(path, "wt") as f:
         f.write(contents)
 
+##################### TIMER FIRED #####################
+def help_timerFired(app):
+    app.slide1 = not app.slide1
 ##################### USER INPUTS ######################
+def help_mousePressed(app, event):
+    if(app.helpExitButton.isPressedCircle(event.x, event.y)):
+        app.mode = "game"
+
 def game_mousePressed(app, event):
     rowWidth = app.boardHeight / app.rows 
     colWidth = app.boardWidth / app.cols
+    if(app.helpButton.isPressedCircle(event.x, event.y)):
+        app.mode = "help"
     
     # If clicked square is on board, get its row and col
     if(isOnBoardXY(app, event.x, event.y)):
@@ -203,7 +234,7 @@ def game_mousePressed(app, event):
 
     # Checks if square is legal, then places chip and changes turn
     if(isOnBoardXY(app, event.x, event.y) and
-    GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn)):
+       GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn)):
         app.lastPlayedRow, app.lastPlayedCol = clickedRow, clickedCol
         app.gameBoardObject.updateGameBoard(app, clickedRow, clickedCol, app.playerTurn)
         app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
@@ -239,7 +270,9 @@ def game_mouseReleased(app, event):
 
 def game_keyPressed(app, event):
     if(event.key == "r"):
-        appStarted(app)
+        app.mode = "confirm"
+        app.prevScreen = "game"
+        # appStarted(app)
 
 def selection_mousePressed(app, event):
     if(app.gameButton.isPressedRectangle(event.x, event.y)):
@@ -294,9 +327,16 @@ def selection_mousePressed(app, event):
             app.colorIndex1 %= len(app.colors)
         app.color1 = app.colors[app.colorIndex1]
 
+def confirm_mousePressed(app, event):
+    if(app.confirmButton.isPressedRectangle(event.x, event.y)):
+        appStarted(app)
+    elif(app.confirmExitButton.isPressedCircle(event.x, event.y)):
+        app.mode = app.prevScreen
+
 def home_keyPressed(app, event):
     if(event.key == "r"):
-        appStarted(app)
+        app.mode = "confirm"
+        app.prevScreen = "home"
 
 def home_mousePressed(app, event):
     if(app.player2Button.isPressedRectangle(event.x, event.y)):
@@ -330,6 +370,7 @@ def loginVerify_mousePressed(app, event):
         user = app.userNameInput.getText()
         password = app.passwordInput.getText()
         # From 112 Class Notes: Strings
+        # Link: https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
         users = ast.literal_eval(readFile("userAndPass.txt"))
         if(user in users and password == users[user]["password"]):
             if(app.playerCount == 2):
@@ -376,13 +417,8 @@ def loginVerify_keyPressed(app, event):
 def isValidPassword(app, password):
     if(len(password) < 4):
         return False
-    # special = {"!", "@", "#", "$", "%", "&", "^", "*", "(", ")",
-    #            "-", "+", "=", "{", "}", "[", "]", "|", "\\", ":",
-    #            ";", "'", "\"", "<", ",", ">", ".", "?", "/", "_",
-    #            "`", "~"}
     app.num = False
     app.letter = False
-    # app.special = False
     app.upper = False
     app.lower = False
     for letter in password:
@@ -394,8 +430,6 @@ def isValidPassword(app, password):
                 app.lower = True
         elif(letter.isdigit()):
             app.num = True
-        # elif(letter in special):
-        #     app.special = True
 
     return app.num and app.letter and app.upper and app.lower
 
@@ -421,6 +455,7 @@ def signup_mousePressed(app, event):
         if(not isValidPassword(app, password)):
             app.invalidPassword = True
         # REFERENCE: 112 Class Notes: Strings
+        # Link: https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
         users = ast.literal_eval(readFile("userAndPass.txt"))
         if(user in users):
             app.signUpTakenUser = True
@@ -428,7 +463,9 @@ def signup_mousePressed(app, event):
             personAttributes = {
                 "name": app.signUpName.getText(),
                 "username": user,
-                "password": password
+                "password": password,
+                "wins" : 0,
+                "h2h" : {}
             }
             users[user] = personAttributes
             writeFile("userAndPass.txt", repr(users))
@@ -477,12 +514,14 @@ def login_mousePressed(app, event):
             app.mode = "home"
 
 ##################### UPDATE GAME #######################
-# REFERENCES
+# REFERENCEStoDo.txt
 # https://en.wikipedia.org/wiki/minimax
 # https://en.wikipedia.org/wiki/Alpha–beta_pruning
 # https://www.youtube.com/watch?v=l-hh51ncgDI
 # 112 Fundamentals of Game AI
+# ^^ Link: https://www.cs.cmu.edu/~112/notes/student-tp-guides/GameAI.pdf
 # TA Lecture on Game AI
+# ^^ Link: https://docs.google.com/presentation/d/1GVwRIISX0RA4_jvgF90kZZUG_soZUS6P4FFutYwQ39M/edit#slide=id.g35f391192_00
 def miniMax(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
     boardScore = 0
     move = None
@@ -563,7 +602,6 @@ def isOnBoardXY(app, x, y):
     return False
 
 ######################## REDRAW ALL ########################
-
 def signup_redrawAll(app, canvas):
     Draw.Login.drawLoginPage(app, canvas)
     Draw.SignUp.drawSignUp(app, canvas)
@@ -584,6 +622,14 @@ def login_redrawAll(app, canvas):
 def home_redrawAll(app, canvas):
     Draw.Home.drawHomePage(app, canvas)
 
+def confirm_redrawAll(app, canvas):
+    if(app.prevScreen == "home"):
+        home_redrawAll(app, canvas)
+    elif(app.prevScreen == "game"):
+        game_redrawAll(app, canvas)
+    
+    Draw.Confirm.drawConfirm(app, canvas)
+
 def selection_redrawAll(app, canvas):
     Draw.Selection.drawSelectionPage(app, canvas)
 
@@ -591,10 +637,20 @@ def game_redrawAll(app, canvas):
     Draw.Game.drawBoard(app, canvas)
     Draw.Game.drawScore(app, canvas)
     Draw.Game.drawLegalSquares(app, canvas)
-    Draw.Game.drawGameButton(app, canvas)
+    Draw.Game.drawGameButtons(app, canvas)
     Draw.Game.drawError(app, canvas)
     if(app.gameOver):
         Draw.Game.drawGameOver(app, canvas)
+
+def help_redrawAll(app, canvas):
+    game_redrawAll(app, canvas)
+    Draw.Help.drawRulesPage(app, canvas)
+    Draw.Help.drawMiniBoard(app, canvas)
+    Draw.Help.drawHelpButtons(app, canvas)
+    if(app.slide1):
+        Draw.Help.drawRuleAnimation1(app, canvas)
+    else:
+        Draw.Help.drawRuleAnimation2(app, canvas)
 
 def main():
     runApp(width = 1100, height = 800, title = "Othello")

@@ -15,7 +15,6 @@ class Button:
         self.textFont = textFont
         self.direct = direct
         self.fill = fill
-        print(self.text, self.fill)
 
     def drawRectangleButton(self, app, canvas):
         canvas.create_rectangle(self.xCenter - self.xLen / 2,
@@ -29,15 +28,15 @@ class Button:
                            font = self.textFont, anchor = "c", fill = self.fill)
 
     def drawCircleButton(self, app, canvas):
-        canvas.create_oval(self.xCenter - self.xLen / 2,
+        canvas.create_oval(self.xCenter - self.yLen / 2,
                                 self.yCenter - self.yLen / 2,
-                                self.xCenter + self.xLen / 2,
+                                self.xCenter + self.yLen / 2,
                                 self.yCenter + self.yLen / 2,
                                 fill = self.bgColor, outline = self.outlineColor,
                                 width = self.outlineWidth)
 
         canvas.create_text(self.xCenter, self.yCenter, text = self.text,
-                           font = self.textFont, anchor = "c")
+                           font = self.textFont, anchor = "c", fill = self.fill)
 
     def drawTriangleButton(self, app, canvas):
         canvas.create_polygon((self.xCenter + self.direct * self.xLen / 2, 
@@ -60,7 +59,7 @@ class Button:
         return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
     def isPressedCircle(self, eventX, eventY):
-        radius = self.xLen / 2
+        radius = self.yLen / 2
         distance = Button.getDistance(self.xCenter, self.yCenter, eventX, eventY)
         if(distance <= radius):
             return True

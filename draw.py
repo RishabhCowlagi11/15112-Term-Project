@@ -142,7 +142,7 @@ class Selection:
 
 class Home:
     def drawHomePage(app, canvas):
-        canvas.create_rectangle(0, 0, app.width, app.height, fill = "green")
+        canvas.create_rectangle(0, 0, app.width, app.height, fill = app.boardColor)
         croppedImg = app.mainImage.crop((0, 30, 720, 205))
         canvas.create_image(app.width / 2, app.height / 2 - 225, image = ImageTk.PhotoImage(croppedImg))
 
@@ -150,6 +150,102 @@ class Home:
         app.player1Button.drawRectangleButton(app, canvas)
 
         app.tournamentButton.drawRectangleButton(app, canvas)
+
+class Confirm:
+    def drawConfirm(app, canvas):
+        canvas.create_rectangle(app.width / 3, app.height / 3,
+                                app.width - app.width / 3, app.height - app.height / 3,
+                                fill = app.boardColor, outline = "black", width = 5)
+        text = "Are you sure you want to restart?\nIf you are in a game this will\n\
+count as a loss."
+        canvas.create_text(app.width / 2, app.height / 2, text = text,
+                           font = "Arial 22 bold", fill = "black")
+
+        app.confirmButton.drawRectangleButton(app, canvas)
+        app.confirmExitButton.drawCircleButton(app, canvas)
+
+class Help:
+    def drawRulesPage(app, canvas):
+        xCorner = app.width / 200
+        yCorner = app.height / 10
+        canvas.create_rectangle(xCorner, yCorner, 
+                                app.width - 5, app.height - app.height / 10,
+                                fill = app.boardColor, outline = "black", width = 5)
+
+        canvas.create_text(app.width / 2, yCorner + app.height / 15, text = "Rules", 
+                           fill = "black", font = f"Arial {app.fontSize} bold underline",
+                           anchor = "c")
+
+        text = "Othello is a game where 2 players take turns\nplacing a chips of \
+different colors on the board.\nThe only legal square to place a \
+chip are the\nsquares that will flip over at least one of your\nopponent's \
+chips (if there are no squares that flip\nover one of your opponent's \
+chips, you lose your\nturn). When ever you place down a chip, all\n\
+of your opponent's chips that are between the chip\nyou just played \
+and another one of your chips gets\nflipped. The goal of the game \
+is to 'control' the most\nnumber of chips. The game ends when the board \
+is\nfull or neither player has any legal moves."
+
+        canvas.create_text(6 * app.width / 17, 10 * app.height / 21,
+                           text = text, font = f"Arial {int(app.fontSize - app.fontSize / 5)}",
+                           anchor = "c", fill = "black")
+
+    def drawMiniBoard(app, canvas):
+        squareSide = app.width / 15
+        startX = 11 * app.width / 16
+        startY = app.height / 4
+        for i in range(4):
+            for j in range(4):
+                canvas.create_rectangle(startX + squareSide * i, startY + squareSide * j,
+                                        startX + squareSide * (i + 1), startY + squareSide * (j + 1),
+                                        fill = app.boardColor, outline = "black", width = 3)
+
+    def drawRuleAnimation1(app, canvas):
+        squareSide = app.width / 18
+        startX = 11 * app.width / 16
+        startY = app.height / 4
+        canvas.create_oval(startX + squareSide * 3 + 42, startY + 7,
+                           startX + squareSide * 4 + 42, startY + squareSide + 7,
+                           fill = "white", outline = "black", width = 3)
+
+        canvas.create_oval(startX + squareSide * 2 + 32, startY + squareSide + 20,
+                           startX + squareSide * 3 + 32, startY + squareSide * 2 + 20,
+                           fill = "black", outline = "black", width = 3)
+
+        canvas.create_oval(startX + squareSide * 2 + 32, startY + squareSide * 2 + 30,
+                           startX + squareSide * 3 + 32, startY + squareSide * 3 + 30,
+                           fill = "black", outline = "black", width = 3)
+
+        canvas.create_oval(startX + squareSide * 3 + 42, startY + squareSide * 2 + 30,
+                           startX + squareSide * 4 + 42, startY + squareSide * 3 + 30,
+                           fill = "white", outline = "black", width = 3)
+
+    def drawRuleAnimation2(app, canvas):
+        squareSide = app.width / 18
+        startX = 11 * app.width / 16
+        startY = app.height / 4
+        canvas.create_oval(startX + squareSide * 3 + 42, startY + 7,
+                           startX + squareSide * 4 + 42, startY + squareSide + 7,
+                           fill = "white", outline = "black", width = 3)
+
+        canvas.create_oval(startX + squareSide * 2 + 32, startY + squareSide + 20,
+                           startX + squareSide * 3 + 32, startY + squareSide * 2 + 20,
+                           fill = "white", outline = "black", width = 3)
+
+        canvas.create_oval(startX + squareSide * 2 + 32, startY + squareSide * 2 + 30,
+                           startX + squareSide * 3 + 32, startY + squareSide * 3 + 30,
+                           fill = "white", outline = "black", width = 3)
+
+        canvas.create_oval(startX + squareSide * 3 + 42, startY + squareSide * 2 + 30,
+                           startX + squareSide * 4 + 42, startY + squareSide * 3 + 30,
+                           fill = "white", outline = "black", width = 3)
+
+        canvas.create_oval(startX + squareSide + 20, startY + squareSide * 2 + 30,
+                           startX + squareSide * 2 + 20, startY + squareSide * 3 + 30,
+                           fill = "white", outline = "black", width = 3)
+
+    def drawHelpButtons(app, canvas):
+        app.helpExitButton.drawCircleButton(app, canvas)
 
 class Game:
     def drawLegalSquares(app, canvas):
@@ -179,9 +275,10 @@ class Game:
         canvas.create_text(app.width / 2, app.height / 2, text = text,
                         font = "Arial 28", anchor = "c")
 
-    def drawGameButton(app, canvas):
+    def drawGameButtons(app, canvas):
         app.player1TurnButton.drawRectangleButton(app, canvas)
         app.player2TurnButton.drawRectangleButton(app, canvas)
+        app.helpButton.drawCircleButton(app, canvas)
 
     def drawError(app, canvas):
         if(app.error and not app.gameOver):
