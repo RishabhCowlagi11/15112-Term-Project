@@ -6,7 +6,8 @@ class Login:
         canvas.create_rectangle(0, 0, app.width, app.height, fill = app.boardColor)
 
         croppedImg = app.mainImage.crop((0, 30, 720, 205))
-        canvas.create_image(app.width / 2, app.height / 2 - 225, image = ImageTk.PhotoImage(croppedImg))
+        canvas.create_image(app.width / 2, app.height / 2 - 225, 
+                            image = ImageTk.PhotoImage(croppedImg))
 
         if(app.playerCount == 2):
             canvas.create_text(app.width / 2, app.height / 2 - app.height / 8,
@@ -144,7 +145,8 @@ class Home:
     def drawHomePage(app, canvas):
         canvas.create_rectangle(0, 0, app.width, app.height, fill = app.boardColor)
         croppedImg = app.mainImage.crop((0, 30, 720, 205))
-        canvas.create_image(app.width / 2, app.height / 2 - 225, image = ImageTk.PhotoImage(croppedImg))
+        canvas.create_image(app.width / 2, app.height / 2 - 225, 
+                            image = ImageTk.PhotoImage(croppedImg))
 
         app.player2Button.drawRectangleButton(app, canvas)
         app.player1Button.drawRectangleButton(app, canvas)

@@ -173,6 +173,8 @@ def gameAppStarted(app):
     app.lastPlayedRow = None
     app.lastPlayedCol = None
 
+    app.miniMaxDepth = 1
+
 def helpAppStarted(app):
     app.slide1 = True
     app.timerDelay = 1500
@@ -237,6 +239,8 @@ def game_mousePressed(app, event):
        GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn)):
         app.lastPlayedRow, app.lastPlayedCol = clickedRow, clickedCol
         app.gameBoardObject.updateGameBoard(app, clickedRow, clickedCol, app.playerTurn)
+        # print("Player Move: ", (clickedRow, clickedCol))
+        # app.gameBoardObject.displayBoard()
         app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
         
         app.playerTurn = 1 - app.playerTurn       
@@ -258,8 +262,9 @@ def updatePlayerOutline(app):
 def game_mouseReleased(app, event):
     app.error = False
     if(app.playerTurn == 1 and app.miniMax):
-            depth = 1
-            miniMax(app, depth, depth, app.gameBoard, app.gameBoardObject.getLegalSquares())
+            # miniMax(app, depth, depth, app.gameBoard, app.gameBoardObject.getLegalSquares())
+            miniMax2(app, app.miniMaxDepth, app.miniMaxDepth, app.gameBoardObject,
+                     app.gameBoardObject.getLegalSquares())
             app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
 
     if(len(app.gameBoardObject.getLegalSquares()) == 0):
@@ -269,10 +274,11 @@ def game_mouseReleased(app, event):
             app.gameOver = True
 
 def game_keyPressed(app, event):
-    if(event.key == "r"):
+    if(event.key == "r" and not app.gameOver):
         app.mode = "confirm"
         app.prevScreen = "game"
-        # appStarted(app)
+    else:
+        appStarted(app)
 
 def selection_mousePressed(app, event):
     if(app.gameButton.isPressedRectangle(event.x, event.y)):
@@ -533,8 +539,8 @@ def miniMax(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
     for i, j in legalSquares:
         # Creating new board instance to simulate the game
         # as to not directly change the gameBoard
-        simulatedBoard = Board.Board(app.gameBoardObject.rows, 
-                                     app.gameBoardObject.cols,
+        simulatedBoard = Board.Board(app.gameBoardObject.getRows(), 
+                                     app.gameBoardObject.getCols(),
                                      board = copy.deepcopy(board))
 
         simulatedBoard.updateGameBoard(app, i, j, int(isComputerTurn))
@@ -562,6 +568,68 @@ def miniMax(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
         updatePlayerOutline(app)
     
     return boardScore
+
+def computerMakeMove(app, board, move):
+    time.sleep(0.7)
+    # print("Computer Move: ", move)
+    board.updateGameBoard(app, move[0], move[1], 1)
+    # board.displayBoard()
+    app.lastPlayedRow = move[0]
+    app.lastPlayedCol = move[1]
+    app.playerTurn = 0
+    updatePlayerOutline(app)
+
+# board is a board object
+def miniMax2(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
+    # print("Running miniMax2....")
+    if(depth == 0):
+        return getState(app, board.getBoard())
+
+    # Computer wants to maximize game score
+    if(isComputerTurn):
+        boardScore = -1 * app.rows * app.cols - 1
+        move = None
+        for row, col in legalSquares:
+            
+            simulatedBoard = Board.Board(board.getRows(),
+                                         board.getCols(),
+                                         board = copy.deepcopy(board.getBoard()))
+
+            simulatedBoard.updateGameBoard(app, row, col, int(isComputerTurn))
+            simulatedBoard.displayBoard()
+            print("******************")
+
+            result = miniMax2(app, depth - 1, refDepth, simulatedBoard,
+                              simulatedBoard.getLegalSquares(), not isComputerTurn)
+            
+            if(result >= boardScore):
+                boardScore = result
+                move = (row, col)
+    else:
+        boardScore = app.rows * app.cols + 1
+        move = None
+        for row, col in legalSquares:
+            
+            simulatedBoard = Board.Board(board.getRows(),
+                                         board.getCols(),
+                                         board = copy.deepcopy(board.getBoard()))
+
+            simulatedBoard.updateGameBoard(app, row, col, int(isComputerTurn))
+            simulatedBoard.displayBoard()
+            print("******************")
+
+            result = miniMax2(app, depth - 1, refDepth, simulatedBoard,
+                              simulatedBoard.getLegalSquares(), not isComputerTurn)
+            
+            if(result >= boardScore):
+                boardScore = result
+                move = (row, col)
+
+    if(move != None and depth == refDepth):
+        computerMakeMove(app, board, move)
+
+    return boardScore
+
 
 #################### STATE FUNCTIONS ####################
 def getCounts(app, board):

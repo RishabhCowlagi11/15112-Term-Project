@@ -14,8 +14,11 @@ class Board:
         else:
             self.board = board
 
-    def __str__(self):
-        pass
+    def getRows(self):
+        return self.rows
+
+    def getCols(self):
+        return self.cols
 
     def updateBoardWithObject(self, row, col, player):
         self.board[row][col] = player
@@ -72,7 +75,6 @@ class Board:
                 if(GamePlay.GamePlay.legalSquare(app, board, i, j, playerTurn)):
                     result.add((i, j))
         return result
-
 
     def updateLegalSquares(self, app, playerTurn):
         result = set()
