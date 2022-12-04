@@ -9,6 +9,18 @@ import person as Person
 import draw as Draw
 
 ##################### APP STARTED #####################
+def socketsClientAppStarted(app):
+    # Include Server IP here
+    app.SERVER = ""
+    app.PORT = 50009
+    app.ADDR = (app.SERVER, app.PORT)
+    app.FORMAT = "utf-8"
+    app.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        app.client.connect(app.ADDR)
+    except ConnectionRefusedError:
+        print("Begin by Running the Server")
+
 def loginAppStarted(app):
     # Link: https://psdeals.net/id-store/game/1205152/othello-full-game
     app.mainImage = app.loadImage("othy.jpeg")
@@ -26,6 +38,13 @@ def loginAppStarted(app):
                                     text = "Play as Guest",
                                     textFont = "Arial 26 bold underline")
 
+    app.loginBackButton = Button(app.width / 20, app.height / 30,
+                                 app.width / 12, app.height / 20,
+                                 text = "Back")
+
+    app.loginButtons = [app.loginButton, app.signUpButton, app.guestButton,
+                        app.loginBackButton]
+
 def loginVerificationAppStarted(app):
     app.loginError = False
     app.userNameInput = Text(app.width - app.width / 3, app.height / 3,
@@ -42,6 +61,8 @@ def loginVerificationAppStarted(app):
     app.loginExitButton = Button(app.width / 10, app.height / 5,
                                  app.width / 20, app.height / 20,
                                  text = "X", bgColor = "red")
+
+    app.loginVerificationButtons = [app.submitLoginButton]
 
 def signUpAppStarted(app):
     app.signUpTakenUser = False
@@ -62,9 +83,11 @@ def signUpAppStarted(app):
     app.submitSignUpButton = Button(app.width / 2, app.height - app.height / 5.5,
                                     app.width / 2, app.height / 15, text = "Sign Up!!")
 
-    app.signUpExitButton = Button(app.width / 10, app.height / 5,
-                                  app.width / 20, app.height / 20,
+    app.signUpExitButton = Button(app.width / 10, app.height / 4.7,
+                                  app.width / 20, app.height / 15,
                                   text = "X", bgColor = "red")
+
+    app.signUpButtons = [app.submitSignUpButton]
 
 def homeAppStarted(app):
     # Link: https://psdeals.net/id-store/game/1205152/othello-full-game
@@ -84,6 +107,13 @@ def homeAppStarted(app):
                                          app.width / 2, app.height / 10,
                                          text = "Tournament Othello!!!")
 
+    app.homeBackButton = Button(app.width / 20, app.height / 30,
+                                app.width / 12, app.height / 20,
+                                text = "Back")
+
+    app.homeButtons = [app.player2Button, app.player1Button, app.tournamentButton,
+                       app.homeBackButton]
+
     app.fontSize = int(app.width / 30)
 
 def confirmAppStarted(app):
@@ -93,6 +123,8 @@ def confirmAppStarted(app):
     app.confirmExitButton = Button(13 * app.width / 36, 13.5 * app.height / 36,
                                    app.width / 15, app.height / 20, text = "X",
                                    bgColor = "white", fill = "red")
+
+    app.confirmButtons = [app.confirmButton, app.confirmExitButton]
 
 def selectionAppStarted(app):
     app.gameButton = Button(app.width - app.width / 10, app.height - app.height / 20,
@@ -119,6 +151,14 @@ def selectionAppStarted(app):
                               app.width / 20, app.height / 30,
                               direct = -1, text = "", outlineWidth = 1)
 
+    app.selectionBackButton = Button(app.width / 20, app.height / 30,
+                                app.width / 12, app.height / 20,
+                                text = "Back")
+
+    app.selectionArrowButtons = [app.player1Left, app.player1Right, app.player2Left,
+                                 app.player2Right]
+    app.selectionButtons = [app.gameButton, app.selectionBackButton]
+
 def gameAppStarted(app):
     app.colors = ["White", "Black", "Green", "Blue", "Cyan", "Yellow", "Magenta",
                   "Purple", "Dark Blue", "Orange", "Dark Green"]
@@ -138,6 +178,8 @@ def gameAppStarted(app):
     # declare default board size
     app.rows = 8
     app.cols = 8
+    app.hoverRow = None
+    app.hoverCol = None
 
     # declare board dimensions
     app.marginWidthLeft = app.width / 24
@@ -158,6 +200,7 @@ def gameAppStarted(app):
 
     # player 0 make first move
     app.playerTurn = 0
+    app.computerTurn = False
 
     # create the game board, place chips and get legal moves
     app.gameBoardObject = Board.Board(app.rows, app.cols)
@@ -173,7 +216,14 @@ def gameAppStarted(app):
     app.lastPlayedRow = None
     app.lastPlayedCol = None
 
-    app.miniMaxDepth = 1
+    app.flipPieces = []
+    app.pieceFlip = False
+    app.flipIncrements = 5
+    app.dcol = 0
+
+    app.miniMaxDepth = 2
+
+    app.gameButtons = [app.helpButton]
 
 def helpAppStarted(app):
     app.slide1 = True
@@ -183,6 +233,8 @@ def helpAppStarted(app):
                                 app.width / 15, app.height / 15, text = "X",
                                 fill = "red", bgColor = "white",
                                 textFont = "Arial 36 bold")
+
+    app.helpButtons = [app.helpExitButton]
 
 def appStarted(app):
     # game starts at login screen 
@@ -214,6 +266,40 @@ def writeFile(path, contents):
         f.write(contents)
 
 ##################### TIMER FIRED #####################
+def game_timerFired(app):
+    app.timerDelay = 50
+    if(app.gameBoardObject.isGameOver(app, app.playerTurn)):
+        app.gameOver = True
+    elif(app.gameBoardObject.noMoreMovesPlayer(app.playerTurn)):
+        app.playerTurn = 1 - app.playerTurn
+        app.gameBoardObject.updateLegalSquares(app, app.playerTurn)
+    elif(app.pieceFlip):
+        print("A")
+        app.mode = "gameAnimation"
+    print(app.computerTurn)
+    if(app.playerTurn == 1 and app.miniMax and app.computerTurn):
+        print("B")
+        miniMax2(app, app.miniMaxDepth, app.miniMaxDepth, app.gameBoardObject,
+                 app.gameBoardObject.getLegalSquares())
+        app.computerTurn = False
+        app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
+
+def gameAnimation_timerFired(app):
+    app.timerDelay = 100
+    for row, col in app.flipPieces:
+            app.gameBoard[row][col].setColor(None)
+    print("D")
+    app.dcol += app.boardWidth / (app.cols * app.flipIncrements)
+    if(app.dcol + 2 >= app.boardWidth / app.cols):
+        for row, col in app.flipPieces:
+            app.gameBoard[row][col].setColor(1 - app.playerTurn)
+        app.gameBoardObject.updateLegalSquares(app, app.playerTurn)
+        app.dcol = 0
+        app.pieceFlip = False
+        app.mode = "game"
+        if(app.playerTurn == 1):
+            app.computerTurn = True
+
 def help_timerFired(app):
     app.slide1 = not app.slide1
 ##################### USER INPUTS ######################
@@ -222,6 +308,8 @@ def help_mousePressed(app, event):
         app.mode = "game"
 
 def game_mousePressed(app, event):
+    if(app.dcol + 2 <= app.boardWidth / app.cols and app.pieceFlip):
+        return
     rowWidth = app.boardHeight / app.rows 
     colWidth = app.boardWidth / app.cols
     if(app.helpButton.isPressedCircle(event.x, event.y)):
@@ -239,14 +327,25 @@ def game_mousePressed(app, event):
        GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn)):
         app.lastPlayedRow, app.lastPlayedCol = clickedRow, clickedCol
         app.gameBoardObject.updateGameBoard(app, clickedRow, clickedCol, app.playerTurn)
-        # print("Player Move: ", (clickedRow, clickedCol))
-        # app.gameBoardObject.displayBoard()
+        print("C")
+        app.pieceFlip = True
+
         app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
         
         app.playerTurn = 1 - app.playerTurn       
         updatePlayerOutline(app)
     else:
         app.error = True
+
+def game_mouseMoved(app, event):
+    if(isOnBoardXY(app, event.x, event.y)):
+        rowWidth = app.boardHeight / app.rows 
+        colWidth = app.boardWidth / app.cols
+        app.hoverRow = int((event.y - app.marginHeightTop) / rowWidth)
+        app.hoverCol = int((event.x - app.marginWidthLeft) / colWidth)
+    else:
+        app.hoverRow, app.hoverCol = None, None
+
 
 def updatePlayerOutline(app):
     if(app.playerTurn == 1):
@@ -261,17 +360,6 @@ def updatePlayerOutline(app):
 
 def game_mouseReleased(app, event):
     app.error = False
-    if(app.playerTurn == 1 and app.miniMax):
-            # miniMax(app, depth, depth, app.gameBoard, app.gameBoardObject.getLegalSquares())
-            miniMax2(app, app.miniMaxDepth, app.miniMaxDepth, app.gameBoardObject,
-                     app.gameBoardObject.getLegalSquares())
-            app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
-
-    if(len(app.gameBoardObject.getLegalSquares()) == 0):
-        app.playerTurn = 1 - app.playerTurn
-        app.gameBoardObject.updateLegalSquares(app, app.playerTurn)
-        if(len(app.gameBoardObject.getLegalSquares()) == 0):
-            app.gameOver = True
 
 def game_keyPressed(app, event):
     if(event.key == "r" and not app.gameOver):
@@ -283,6 +371,7 @@ def game_keyPressed(app, event):
 def selection_mousePressed(app, event):
     if(app.gameButton.isPressedRectangle(event.x, event.y)):
         app.mode = "game"
+        app.timerDelay = 50
         colorFill0, colorFill1 = "black", "black"
         if(app.color0 == "Black" or app.color0.find("Dark") != -1):
             colorFill0 = "white"
@@ -332,6 +421,21 @@ def selection_mousePressed(app, event):
             app.colorIndex1 += 1
             app.colorIndex1 %= len(app.colors)
         app.color1 = app.colors[app.colorIndex1]
+    elif(app.selectionBackButton.isPressedRectangle(event.x, event.y)):
+        app.mode = "home"
+
+def selection_mouseMoved(app, event):
+    for button in app.selectionButtons:
+        if(button.isPressedRectangle(event.x, event.y)):
+            button.updateColor("dark gray")
+        else:
+            button.updateColor("gray")
+    
+    for arrow in app.selectionArrowButtons:
+        if(arrow.isPressedTriangle(event.x, event.y)):
+            arrow.updateColor("dark gray")
+        else:
+            arrow.updateColor("gray")
 
 def confirm_mousePressed(app, event):
     if(app.confirmButton.isPressedRectangle(event.x, event.y)):
@@ -354,6 +458,15 @@ def home_mousePressed(app, event):
         app.mode = "selection"
         app.playerCount = 1
         app.miniMax = True
+    elif(app.homeBackButton.isPressedRectangle(event.x, event.y)):
+        app.mode = "login"
+
+def home_mouseMoved(app, event):
+    for button in app.homeButtons:
+        if(button.isPressedRectangle(event.x, event.y)):
+            button.updateColor("dark gray")
+        else:
+            button.updateColor("gray")
 
 def clearTextBoxes(app):
     textBoxes = [app.userNameInput, app.passwordInput, app.signUpName, 
@@ -444,7 +557,6 @@ def makeTrueSignUp(app, element):
     app.signUpPassword.updateIsClicked(2 == element)
     app.signUpName.updateIsClicked(3 == element)
     
-
 def signup_mousePressed(app, event):
     if(app.signUpUserName.isPressedRectangle(event.x, event.y)):
         makeTrueSignUp(app, 1)
@@ -506,7 +618,17 @@ def signup_keyPressed(app, event):
             app.signUpName.updateIsClicked(action)
         else:
             app.signUpName.updateText(action)
-        
+
+def signup_mouseMoved(app, event):
+    if(app.submitSignUpButton.isPressedRectangle(event.x, event.y)):
+        app.submitSignUpButton.updateColor("dark gray")
+    else:
+        app.submitSignUpButton.updateColor("gray")
+    
+    if(app.signUpExitButton.isPressedCircle(event.x, event.y)):
+        app.signUpExitButton.updateColor("magenta2")
+    else:
+        app.signUpExitButton.updateColor("red")
 
 def login_mousePressed(app, event):
     if(app.loginButton.isPressedRectangle(event.x, event.y)):
@@ -518,9 +640,18 @@ def login_mousePressed(app, event):
             app.mode = "selection"
         else:
             app.mode = "home"
+    elif(app.loginBackButton.isPressedRectangle(event.x, event.y)):
+        if(app.playerCount == 2):
+            app.mode = "home"
 
+def login_mouseMoved(app, event):
+    for button in app.loginButtons:
+        if(button.isPressedRectangle(event.x, event.y)):
+            button.updateColor("dark gray")
+        else:
+            button.updateColor("gray")
 ##################### UPDATE GAME #######################
-# REFERENCEStoDo.txt
+# REFERENCES
 # https://en.wikipedia.org/wiki/minimax
 # https://en.wikipedia.org/wiki/Alpha–beta_pruning
 # https://www.youtube.com/watch?v=l-hh51ncgDI
@@ -528,61 +659,19 @@ def login_mousePressed(app, event):
 # ^^ Link: https://www.cs.cmu.edu/~112/notes/student-tp-guides/GameAI.pdf
 # TA Lecture on Game AI
 # ^^ Link: https://docs.google.com/presentation/d/1GVwRIISX0RA4_jvgF90kZZUG_soZUS6P4FFutYwQ39M/edit#slide=id.g35f391192_00
-def miniMax(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
-    boardScore = 0
-    move = None
-
-    # Base Case
-    if(depth == 0):
-        return getState(app, board)
-
-    for i, j in legalSquares:
-        # Creating new board instance to simulate the game
-        # as to not directly change the gameBoard
-        simulatedBoard = Board.Board(app.gameBoardObject.getRows(), 
-                                     app.gameBoardObject.getCols(),
-                                     board = copy.deepcopy(board))
-
-        simulatedBoard.updateGameBoard(app, i, j, int(isComputerTurn))
-
-        # Recursive call to get the game score of the remaining moves
-        result = miniMax(app, depth - 1, depth, simulatedBoard.getBoard(),
-                         simulatedBoard.getLegalSquares(), not isComputerTurn)
-
-        # Computer wants to maximize game score
-        # Player wants to minimize game score
-        if(isComputerTurn and result >= boardScore):
-            boardScore = result
-            move = (i, j)
-        elif(result <= boardScore):
-            boardScore = result
-            move = (i, j)
-    
-    if(move != None and depth == refDepth):
-        # https://codeinstitute.net/global/blog/how-to-wait-in-python/
-        time.sleep(0.3) # Create some formula to calculate this
-        app.gameBoardObject.updateGameBoard(app, move[0], move[1], 1)
-        app.lastPlayedRow = move[0]
-        app.lastPlayedCol = move[1]
-        app.playerTurn = 0
-        updatePlayerOutline(app)
-    
-    return boardScore
-
 def computerMakeMove(app, board, move):
-    time.sleep(0.7)
-    # print("Computer Move: ", move)
+    # time.sleep(0.7)
     board.updateGameBoard(app, move[0], move[1], 1)
-    # board.displayBoard()
+    app.pieceFlip = True
     app.lastPlayedRow = move[0]
     app.lastPlayedCol = move[1]
     app.playerTurn = 0
+    board.updateLegalSquares(app, app.playerTurn)
     updatePlayerOutline(app)
 
-# board is a board object
-def miniMax2(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
-    # print("Running miniMax2....")
-    if(depth == 0):
+def miniMax2(app, depth, refDepth, board, legalSquares,
+             alpha = -1000, beta = 1000, isComputerTurn = True):
+    if(depth == 0 or board.isGameOver(app, int(isComputerTurn))):
         return getState(app, board.getBoard())
 
     # Computer wants to maximize game score
@@ -596,18 +685,24 @@ def miniMax2(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
                                          board = copy.deepcopy(board.getBoard()))
 
             simulatedBoard.updateGameBoard(app, row, col, int(isComputerTurn))
-            simulatedBoard.displayBoard()
-            print("******************")
+            simulatedBoard.updateLegalSquares(app, int(isComputerTurn))
 
             result = miniMax2(app, depth - 1, refDepth, simulatedBoard,
-                              simulatedBoard.getLegalSquares(), not isComputerTurn)
-            
+                              simulatedBoard.getLegalSquares(),
+                              alpha, beta, not isComputerTurn)
             if(result >= boardScore):
                 boardScore = result
                 move = (row, col)
+
+            if(alpha <= result):
+                alpha = result
+
+            if(beta <= alpha):
+                break
     else:
         boardScore = app.rows * app.cols + 1
         move = None
+
         for row, col in legalSquares:
             
             simulatedBoard = Board.Board(board.getRows(),
@@ -615,21 +710,26 @@ def miniMax2(app, depth, refDepth, board, legalSquares, isComputerTurn = True):
                                          board = copy.deepcopy(board.getBoard()))
 
             simulatedBoard.updateGameBoard(app, row, col, int(isComputerTurn))
-            simulatedBoard.displayBoard()
-            print("******************")
+            simulatedBoard.updateLegalSquares(app, int(isComputerTurn))
 
             result = miniMax2(app, depth - 1, refDepth, simulatedBoard,
-                              simulatedBoard.getLegalSquares(), not isComputerTurn)
-            
-            if(result >= boardScore):
+                              simulatedBoard.getLegalSquares(), 
+                              alpha, beta, not isComputerTurn)
+
+            if(result <= boardScore):
                 boardScore = result
                 move = (row, col)
+
+            if(beta >= result):
+                beta = result
+            
+            if(beta <= alpha):
+                break
 
     if(move != None and depth == refDepth):
         computerMakeMove(app, board, move)
 
     return boardScore
-
 
 #################### STATE FUNCTIONS ####################
 def getCounts(app, board):
@@ -661,6 +761,13 @@ def placeChipsOnBoard(app):
             else:
                 chip = Chip.Chip((row, col), None)
             app.gameBoardObject.updateBoardWithObject(row, col, chip)
+
+def oneHotEncoding(app, group, element, func, trueState, falseState):
+    for i in group:
+        if(i == element):
+            func(i, trueState)
+        else:
+            func(i, falseState)
 
 ################## CHECKING FUNCTIONS ###################
 def isOnBoardXY(app, x, y):
@@ -701,10 +808,22 @@ def confirm_redrawAll(app, canvas):
 def selection_redrawAll(app, canvas):
     Draw.Selection.drawSelectionPage(app, canvas)
 
+def gameAnimation_redrawAll(app, canvas):
+    Draw.Game.drawBoard(app, canvas)
+    Draw.Game.drawLegalSquares(app, canvas)
+    Draw.Game.drawChips(app, canvas)
+    Draw.Game.drawScore(app, canvas)
+    Draw.Game.drawGameButtons(app, canvas)
+    Draw.Game.drawError(app, canvas)
+    Draw.Animate.animateFlipPieces(app, canvas, app.playerTurn)
+    if(app.gameOver):
+        Draw.Game.drawGameOver(app, canvas)
+
 def game_redrawAll(app, canvas):
     Draw.Game.drawBoard(app, canvas)
-    Draw.Game.drawScore(app, canvas)
     Draw.Game.drawLegalSquares(app, canvas)
+    Draw.Game.drawChips(app, canvas)
+    Draw.Game.drawScore(app, canvas)
     Draw.Game.drawGameButtons(app, canvas)
     Draw.Game.drawError(app, canvas)
     if(app.gameOver):

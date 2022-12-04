@@ -34,7 +34,6 @@ class Board:
         chip = Chip.Chip((row, col), player)
         self.board[row][col] = chip
         GamePlay.GamePlay.flipPieces(app, self, row, col, player)
-        Board.updateLegalSquares(self, app, 1 - player)
 
     def getBoard(self):
         return self.board
@@ -52,6 +51,8 @@ class Board:
             for col in range(self.cols):
                 if(row == app.lastPlayedRow and col == app.lastPlayedCol):
                     fill = "red"
+                elif(row == app.hoverRow and col == app.hoverCol):
+                    fill = "lime green"
                 else:
                     fill = self.boardColor
                 canvas.create_rectangle(colIncrement * col + app.marginWidthLeft,
@@ -92,28 +93,34 @@ class Board:
             chip = Chip.Chip((row, col), outline = "tan", width = 5)
             chip.drawChip(app, canvas)
 
-    def isGameOver(self, app):
+    def isGameOver(self, app, playerTurn):
         if(self.boardIsFull()):
+            print("C")
             return True
-        elif(self.noMoreMoves(app)):
+        elif(self.noMoreMoves(app, playerTurn)):
+            print("D")
             return True
         return False
 
     def boardIsFull(self):
         for i in self.board:
             for j in i:
-                if(j == None):
+                if(j.getColor() == None):
                     return False
         return True
+    
+    def noMoreMovesPlayer(self, player):
+        if(len(self.legalSquares) == 0):
+            return True
+        return False
 
-    def noMoreMoves(self):
-        if(len(self.legalSquare) == 0):
-            updateLegalSquares(self, app, 1 - playerTurn)
+    def noMoreMoves(self, app, playerTurn):
+        if(len(self.legalSquares) == 0):
+            self.updateLegalSquares(app, 1 - playerTurn)
             
             if(len(self.legalSquares) == 0):
                 return True
-            updateLegalSquares(self, app, 1 - playerTurn)
-        
+            self.updateLegalSquares(app, 1 - playerTurn)
         return False
 
 

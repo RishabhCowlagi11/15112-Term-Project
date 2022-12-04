@@ -70,6 +70,7 @@ class GamePlay:
     @staticmethod
     def flipPieces(app, boardObject, row, col, player):
         board = boardObject.getBoard()
+        app.flipPieces = []
 
         drow = [-1, 0, 1]
         dcol = [-1, 0, 1]
@@ -80,7 +81,8 @@ class GamePlay:
                 if(GamePlay.inDirection(app, board, row, col, dr, dc, player)):
                     newRow, newCol = row + dr, col + dc
                     while(board[newRow][newCol].getColor() == 1 - player):
-                        # Fix Line Below
-                        boardObject.tempUpdateGameBoard(app, newRow, newCol, player)
+                        app.flipPieces.append((newRow, newCol))
+                        # boardObject.tempUpdateGameBoard(app, newRow, newCol, player)
+                        # boardObject.animateFlip(app, newRow, newCol, player)
                         newRow += dr
                         newCol += dc

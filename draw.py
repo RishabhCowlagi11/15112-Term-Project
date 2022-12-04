@@ -12,6 +12,8 @@ class Login:
         if(app.playerCount == 2):
             canvas.create_text(app.width / 2, app.height / 2 - app.height / 8,
                                text = "Player 2 Login", font = "Arial 26 bold underline")
+
+            app.loginBackButton.drawRectangleButton(app, canvas)
         
         app.loginButton.drawRectangleButton(app, canvas)
         app.signUpButton.drawRectangleButton(app, canvas)
@@ -128,7 +130,7 @@ class Selection:
         #                         image = ImageTk.PhotoImage(app.computer2))
 
         canvas.create_text(centerX, centerY + marginY + 20, text = app.player2Name,
-                        font = "Arial 28 bold", fill = "black", anchor = "c")
+                           font = "Arial 28 bold", fill = "black", anchor = "c")
 
         Selection.drawSelectionButtons(app, canvas)
     
@@ -141,6 +143,8 @@ class Selection:
         app.player2Left.drawTriangleButton(app, canvas)
         app.player2Right.drawTriangleButton(app, canvas)
 
+        app.selectionBackButton.drawRectangleButton(app, canvas)
+
 class Home:
     def drawHomePage(app, canvas):
         canvas.create_rectangle(0, 0, app.width, app.height, fill = app.boardColor)
@@ -152,6 +156,8 @@ class Home:
         app.player1Button.drawRectangleButton(app, canvas)
 
         app.tournamentButton.drawRectangleButton(app, canvas)
+
+        app.homeBackButton.drawRectangleButton(app, canvas)
 
 class Confirm:
     def drawConfirm(app, canvas):
@@ -255,8 +261,10 @@ class Game:
 
     def drawBoard(app, canvas):
         app.gameBoardObject.drawBoard(app, canvas)
-        app.gameBoardObject.drawChips(app, canvas)
 
+    def drawChips(app, canvas):
+        app.gameBoardObject.drawChips(app, canvas)
+        
     def drawScore(app, canvas):
         widthCenter = app.boardWidth / 2 + app.marginWidthLeft
         heightCenter = app.height / 25
@@ -286,3 +294,23 @@ class Game:
         if(app.error and not app.gameOver):
             canvas.create_rectangle(0, 0, app.width, app.height, fill = "red")
 
+class Animate:
+    def animateFlipPieces(app, canvas, player):
+        if(player == 0):
+            fill = app.color0
+        else:
+            fill = app.color1
+
+        for chipRow, chipCol in app.flipPieces:
+            rowIncrement = app.boardHeight / app.rows
+            colIncrement = app.boardWidth / app.cols
+            margin = 5
+            if(app.dcol >= 0.5 * colIncrement and player == 0):
+                fill = app.color1
+            elif(app.dcol >= 0.5 * colIncrement):
+                fill = app.color0
+            canvas.create_oval(app.marginWidthLeft + chipCol * colIncrement + margin + app.dcol, 
+                               app.marginHeightTop + chipRow * rowIncrement + margin,
+                               app.marginWidthLeft + (chipCol + 1) * colIncrement - margin - app.dcol,
+                               app.marginHeightTop + (chipRow + 1) * rowIncrement - margin,
+                               fill = fill, outline = "black", width = 5)

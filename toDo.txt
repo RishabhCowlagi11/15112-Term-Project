@@ -1,5 +1,5 @@
 1) Figure out if minimax is working because right now its sucks, and if it is
-   make it better.
+   make it better. (DONE)
 2) Look into avatars and other stuff for selection page
 3) OpenCV for avatars - its probably completely unattainable
 4) Sockets
@@ -7,3 +7,8 @@
 6) Isometric View
 7) Help Screen
 8) Undo Button?
+
+Things to Ask
+1) How to get textbox to fill well
+2) Lines and style
+3) Use of alpha-beta

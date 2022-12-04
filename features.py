@@ -48,6 +48,9 @@ class Button:
                               fill = self.bgColor, outline = self.outlineColor,
                               width = self.outlineWidth)
 
+    def updateColor(self, color):
+        self.bgColor = color
+
     def isPressedRectangle(self, eventX, eventY):
         if(self.xCenter - self.xLen / 2 <= eventX <= self.xCenter + self.xLen / 2 and
            self.yCenter - self.yLen / 2 <= eventY <= self.yCenter + self.yLen / 2):
