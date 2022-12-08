@@ -1,0 +1,163 @@
+Here are references to the resources I used:
+*Note: Some of the lines provide might be slightly off since I may have edited
+my project since updating the references, so ctrl/cmd + f the function names or
+the keywords might be a faster way to find the referenced lines
+
+---------------------- IO Functions ----------------------
+Lines:
+    377 in reversi.py
+    402 - 408 in reversi.py
+    739 in reversi.py
+    873 in reversi.py
+    920 in reversi.py
+    999 in reversi.py
+    1085 in reversi.py
+    1105 in reversi.py
+    1316 in reversi.py
+
+Functions:
+    readFile in reversi.py
+    writeFile in reversi.py
+    profile_mousePressed in reversi.py
+    updateUser_mousePressed in reversi.py
+    updatePass_mousePressed in reversi.py
+    signUp_mousePressed in reversi.py
+    gameEnding in reversi.py
+
+Keywords:
+    writeFile
+    readFile
+    ast.literal_eval
+
+Resources:
+    From 15112 Class Notes Strings: Basic IO
+        Link: https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
+
+------------------------ MINIMAX ------------------------
+Lines:
+    916 - 976 in reversi.py
+
+Functions:
+    miniMax2 in reversi.py
+
+Keywords:
+    miniMax
+
+References:
+    Wikipedia
+        Link: https://en.wikipedia.org/wiki/minimax
+        Link: https://en.wikipedia.org/wiki/Alpha–beta_pruning
+    
+    Youtube Video on Minimax and ABP
+        Link:https://www.youtube.com/watch?v=l-hh51ncgDI
+    
+    112 Fundamentals of Game AI
+        Link: https://www.cs.cmu.edu/~112/notes/student-tp-guides/GameAI.pdf
+    
+    TA Lecture on Game AI
+        Link: https://docs.google.com/presentation/d/1GVwRIISX0RA4_jvgF90kZZUG_soZUS6P4FFutYwQ39M/edit#slide=id.g35f391192_00
+
+---------------------- DrawBox and OpenCV ----------------------
+Lines:
+    176 - 179 in reversi.py
+    603 - 604 in reversi.py
+    619 - 620 in reversi.py
+    735 - 736 in reversi.py
+    765 in reversi.py
+    948 in reversi.py
+    1086 - 1088 in reversi.py
+    213 - 220 in features.py
+
+
+Functions :
+    profileAppStarted in reversi.py
+    profile_mousePressed in reversi.py
+    signup_mousePressed in reversi.py
+    declarePlayerButtons in reversi.py
+    home_mousePressed
+
+Keywords:
+    cv2
+    imread
+    imwrite
+    ImageDraw
+    point
+    loadImage
+    scaleImage
+
+Resources:
+    OpenCV Documentation
+        Link: https://docs.opencv.org/3.4/da/d54/group__imgproc__transform.html
+
+    OpenCV Tutorials
+        Link: https://techtutorialsx.com/2018/06/24/python-opencv-saving-an-image-to-the-file-system/
+        Link: https://learnopencv.com/read-display-and-write-an-image-using-opencv/
+        Link: https://learnopencv.com/image-resizing-with-opencv/
+    
+    Pillow Documentation
+        Link: https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html#PIL.ImageDraw.ImageDraw.point
+
+    15112 Website
+        Link: https://www.cs.cmu.edu/~112/notes/notes-animations-part4.html#loadImageUsingFile
+        Link: https://www.cs.cmu.edu/~112/notes/notes-animations-part4.html#newImagesAndImageDraw
+
+----------------------- Using Modes ----------------------
+Lines:
+    Effectively the entire project
+
+Functions:
+    Most of them
+
+Keywords:
+    app.mode
+    or anything else
+
+Resources:
+    15112 Website
+        Link: https://www.cs.cmu.edu/~112/notes/notes-animations-part4.html#usingModes
+
+----------------------- Misc Functions ----------------------
+Lines:
+    140 in features.py
+    442 in reversi.py
+
+Functions:
+    isPressedArc in features.py
+    home_timerFired in reversi.py
+
+Keywords:
+    atan2
+    time
+
+Resources:
+    W3Schools
+        Link: https://www.w3schools.com/python/ref_math_atan2.asp
+
+    Programiz
+        Link: https://www.programiz.com/python-programming/time
+
+----------------------- Images ---------------------------
+Lines:
+    14, 84 in reversi.py
+    175 in reversi.py
+
+Functions:
+    profileAppStarted in reversi.py
+    loginAppStarted in reversi.py
+
+Keywords:
+    NA
+
+Resources:
+    Othello Image:
+        Link: https://psdeals.net/id-store/game/1205152/othello-full-game
+
+    White Image:
+        Link https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.hillarys.co.uk%2Fproducts%2Fpure-white-shutter%2F&psig=AOvVaw1GXYNrDbYevP2tU6PgamBD&ust=1670512108582000&source=images&cd=vfe&ved=0CA8QjRxqFwoTCKD49tjk5_sCFQAAAAAdAAAAABAD 
+
+------------------------- Inspiration -------------------
+Similar Reversi Website:
+    Link: https://cardgames.io/reversi/
+
+
+

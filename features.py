@@ -1,9 +1,12 @@
+from cmu_112_graphics import *
 import time, math
+import cv2
 
 class Button:
     def __init__(self, xCenter, yCenter, xLen, yLen, text, direct = 1,
                  bgColor = "gray", outlineColor = "black", outlineWidth = 5,
-                 textFont = "Arial 26 bold", fill = "white"):
+                 textFont = "Arial 26 bold", fill = "white", start = 0, extent = 0,
+                 style = "", image = None):
         self.xCenter = xCenter
         self.yCenter = yCenter
         self.xLen = xLen
@@ -15,17 +18,57 @@ class Button:
         self.textFont = textFont
         self.direct = direct
         self.fill = fill
+        self.start = start
+        self.extent = extent
+        self.style = style
+        self.image = image
+
+    def updateOutline(self, color):
+        self.outlineColor = color
+
+    def getXLen(self):
+        return self.xLen
+    
+    def getYLen(self):
+        return self.yLen
+
+    def updateLens(self, length):
+        self.xLen = length
+        self.yLen = length
+
+    def drawArcButton(self, app, canvas):
+        canvas.create_arc(self.xCenter - self.xLen / 2,
+                                self.yCenter - self.yLen / 2,
+                                self.xCenter + self.xLen / 2,
+                                self.yCenter + self.yLen / 2,
+                                fill = self.bgColor, outline = self.outlineColor,
+                                width = self.outlineWidth, start = self.start,
+                                extent = self.extent, style = self.style)
 
     def drawRectangleButton(self, app, canvas):
-        canvas.create_rectangle(self.xCenter - self.xLen / 2,
+        if(self.image == None):
+            canvas.create_rectangle(self.xCenter - self.xLen / 2,
                                 self.yCenter - self.yLen / 2,
                                 self.xCenter + self.xLen / 2,
                                 self.yCenter + self.yLen / 2,
                                 fill = self.bgColor, outline = self.outlineColor,
                                 width = self.outlineWidth)
 
-        canvas.create_text(self.xCenter, self.yCenter, text = self.text,
-                           font = self.textFont, anchor = "c", fill = self.fill)
+            canvas.create_text(self.xCenter, self.yCenter, text = self.text,
+                               font = self.textFont, anchor = "c", fill = self.fill)
+        else:
+            canvas.create_image(self.xCenter, self.yCenter, image = ImageTk.PhotoImage(self.image))
+            
+            canvas.create_rectangle(self.xCenter - self.xLen / 2,
+                                    self.yCenter - self.yLen / 2,
+                                    self.xCenter + self.xLen / 2,
+                                    self.yCenter + self.yLen / 2,
+                                    fill = "", outline = self.outlineColor,
+                                    width = self.outlineWidth)
+            
+            canvas.create_text(self.xCenter, self.yCenter + self.yLen / 2 + app.height / 40,
+                               text = self.text, font = self.textFont, anchor = "c", 
+                               fill = self.bgColor)
 
     def drawCircleButton(self, app, canvas):
         canvas.create_oval(self.xCenter - self.yLen / 2,
@@ -88,13 +131,27 @@ class Button:
                 return True
             return False
 
+    def isPressedArc(self, eventX, eventY):
+        radius = self.xLen / 2
+        distance = Button.getDistance(self.xCenter, self.yCenter, eventX, eventY)
+        if(distance > radius):
+            return False
+        angle = math.atan2(self.yCenter - eventY, self.xCenter - eventX)
+        degAngle = -1 * (angle - math.pi) * 180 / math.pi
+        if(self.start <= degAngle <= self.start + self.extent):
+            return True
+        elif(self.start + self.extent > 360 and degAngle <= self.start + self.extent - 360):
+            return True
+        return False
+
 class Text(Button):
     def __init__(self, xCenter, yCenter, xLen, yLen, text = "", 
                  isClicked = False, bgColor = "white", outlineColor = "black", 
-                 outlineWidth = 5, textFont = "Arial 26 bold", fill = "white"):
+                 outlineWidth = 5, textFont = "Arial 26 bold", fill = "white",
+                 image = None):
         super().__init__(xCenter, yCenter, xLen, yLen, text = "", bgColor = bgColor,
                          outlineColor = outlineColor, outlineWidth = outlineWidth, 
-                         textFont = textFont, fill = fill)
+                         textFont = textFont, fill = fill, image = image)
         self.isClicked = isClicked
         self.text = text
     
@@ -106,7 +163,6 @@ class Text(Button):
     def getText(self):
         return self.text
 
-    # Figure out how to fill the textbox without overflow
     def updateText(self, letter):
         if(letter == -1):
             self.text = self.text[:-1]
@@ -135,3 +191,27 @@ class Text(Button):
                                self.xCenter - self.xLen / 2 + 10,
                                self.yCenter + self.cursorLen / 2,
                                fill = "black", width = 5)
+
+class DrawBox(Button):
+    def __init__(self, xCenter, yCenter, xLen, yLen, text = "", 
+                 bgColor = "grey", outlineColor = "black", outlineWidth = 5, 
+                 textFont = "Arial 26", fill = "", drawColor = (0, 0, 0)):
+                super().__init__(xCenter, yCenter, xLen, yLen, text = "", bgColor = bgColor,
+                                 outlineColor = outlineColor, outlineWidth = outlineWidth,
+                                 textFont = textFont, fill = fill)
+                self.drawColor = drawColor
+
+    def updateColor(self, color):
+        self.drawColor = color
+
+    def drawDrawing(self, app, canvas):
+        canvas.create_image(self.xCenter, self.yCenter, image = ImageTk.PhotoImage(app.img))
+
+    def updateDrawing(self, app, x, y):
+        draw = ImageDraw.Draw(app.img)
+        for i in range(-1 * app.pixelSize, app.pixelSize + 1):
+            for j in range(-1 * app.pixelSize, app.pixelSize + 1):
+                draw.point((x + i - self.xCenter + self.xLen / 2, 
+                            y + j - self.yCenter + self.yLen / 2),
+                            fill = self.drawColor)
+                                

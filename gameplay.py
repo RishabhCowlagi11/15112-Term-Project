@@ -86,3 +86,20 @@ class GamePlay:
                         # boardObject.animateFlip(app, newRow, newCol, player)
                         newRow += dr
                         newCol += dc
+
+    @staticmethod
+    def flipPieces2(app, boardObject, row, col, player):
+        board = boardObject.getBoard()
+
+        drow = [-1, 0, 1]
+        dcol = [-1, 0, 1]
+
+        for dr in drow:
+            for dc in dcol:
+                # print(f"inDirection({(dr, dc)}):", GamePlay.inDirection(app, board, row, col, dr, dc, player))
+                if(GamePlay.inDirection(app, board, row, col, dr, dc, player)):
+                    newRow, newCol = row + dr, col + dc
+                    while(board[newRow][newCol].getColor() == 1 - player):
+                        boardObject.tempUpdateGameBoard(app, newRow, newCol, player)
+                        newRow += dr
+                        newCol += dc

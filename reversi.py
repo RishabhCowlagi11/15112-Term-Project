@@ -1,42 +1,30 @@
 # Importing modules
 from cmu_112_graphics import *
-import copy, time, ast
+import copy, time, ast, random
 import board as Board
 import chip as Chip
-from features import Button, Text
+from features import Button, Text, DrawBox
 import gameplay as GamePlay
-import person as Person
 import draw as Draw
-
+import numpy as np
+import cv2
 ##################### APP STARTED #####################
-def socketsClientAppStarted(app):
-    # Include Server IP here
-    app.SERVER = ""
-    app.PORT = 50009
-    app.ADDR = (app.SERVER, app.PORT)
-    app.FORMAT = "utf-8"
-    app.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        app.client.connect(app.ADDR)
-    except ConnectionRefusedError:
-        print("Begin by Running the Server")
-
 def loginAppStarted(app):
-    # Link: https://psdeals.net/id-store/game/1205152/othello-full-game
     app.mainImage = app.loadImage("othy.jpeg")
+    app.badNames = ["Player 1", "Player 2", "Computer"]
 
     app.loginButton = Button(app.width / 4, app.height / 2, 
-                                    app.width / 3, app.height / 10,
-                                    text = "LOGIN", textFont = "Arial 26 bold underline")
+                             app.width / 3, app.height / 10,
+                             text = "LOGIN", textFont = "Arial 26 bold underline")
 
     app.signUpButton = Button(app.width - app.width / 4, app.height / 2,
-                                     app.width / 3, app.height / 10,
-                                     text = "SIGN UP", textFont = "Arial 26 bold underline")
+                              app.width / 3, app.height / 10,
+                              text = "SIGN UP", textFont = "Arial 26 bold underline")
     
     app.guestButton = Button(app.width / 2, app.height - app.height / 3,
-                                    app.width / 2, app.height / 10,
-                                    text = "Play as Guest",
-                                    textFont = "Arial 26 bold underline")
+                             app.width / 2, app.height / 10,
+                             text = "Play as Guest",
+                             textFont = "Arial 26 bold underline")
 
     app.loginBackButton = Button(app.width / 20, app.height / 30,
                                  app.width / 12, app.height / 20,
@@ -60,9 +48,10 @@ def loginVerificationAppStarted(app):
 
     app.loginExitButton = Button(app.width / 10, app.height / 5,
                                  app.width / 20, app.height / 20,
-                                 text = "X", bgColor = "red")
+                                 text = "X", bgColor = "white", fill = "red")
 
     app.loginVerificationButtons = [app.submitLoginButton]
+    app.loginVerificationCircleButtons = [app.loginExitButton]
 
 def signUpAppStarted(app):
     app.signUpTakenUser = False
@@ -83,38 +72,43 @@ def signUpAppStarted(app):
     app.submitSignUpButton = Button(app.width / 2, app.height - app.height / 5.5,
                                     app.width / 2, app.height / 15, text = "Sign Up!!")
 
-    app.signUpExitButton = Button(app.width / 10, app.height / 4.7,
-                                  app.width / 20, app.height / 15,
-                                  text = "X", bgColor = "red")
+    app.signUpExitButton = Button(app.width / 10, app.height / 5,
+                                  app.width / 20, app.height / 20,
+                                  text = "X", bgColor = "white", fill = "red")
 
     app.signUpButtons = [app.submitSignUpButton]
 
 def homeAppStarted(app):
-    # Link: https://psdeals.net/id-store/game/1205152/othello-full-game
     app.mainImage = app.loadImage("othy.jpeg")
 
     app.verticalSpacing = app.height / 10 + 15
 
     # creates the buttons on the home page
     app.player2Button = Button(app.width / 2, app.height / 2, 
-                                      app.width / 2, app.height / 10,
-                                      text = "2 Player Othello!!!")
-    app.player1Button = Button(app.width / 2, app.height / 2 + app.verticalSpacing,
-                                      app.width / 2, app.height / 10,
-                                      text = "1 Player Othello!!!")
+                               app.width / 2, app.height / 10,
+                               text = "2 Player Othello!!!")
 
-    app.tournamentButton = Button(app.width / 2, app.height / 2 + 2 * app.verticalSpacing,
-                                         app.width / 2, app.height / 10,
-                                         text = "Tournament Othello!!!")
+    app.player1Button = Button(app.width / 2, app.height / 2 + app.verticalSpacing,
+                               app.width / 2, app.height / 10,
+                               text = "1 Player Othello!!!")
+
+    app.profileButton = Button(app.width / 2, app.height / 2 + 2 * app.verticalSpacing,
+                                  app.width / 2, app.height / 10,
+                                  text = "Go To Profile!!!")
 
     app.homeBackButton = Button(app.width / 20, app.height / 30,
                                 app.width / 12, app.height / 20,
                                 text = "Back")
 
-    app.homeButtons = [app.player2Button, app.player1Button, app.tournamentButton,
+    app.homeButtons = [app.player2Button, app.player1Button, app.profileButton,
                        app.homeBackButton]
 
     app.fontSize = int(app.width / 30)
+
+    app.drawErrorY = -1 * app.height / 12
+    app.tellLogin = False
+    app.flipDirection = False
+    app.iteration1 = True
 
 def confirmAppStarted(app):
     app.confirmButton = Button(app.width / 2, app.height - 13.5 * app.height / 36,
@@ -124,12 +118,10 @@ def confirmAppStarted(app):
                                    app.width / 15, app.height / 20, text = "X",
                                    bgColor = "white", fill = "red")
 
-    app.confirmButtons = [app.confirmButton, app.confirmExitButton]
-
 def selectionAppStarted(app):
     app.gameButton = Button(app.width - app.width / 10, app.height - app.height / 20,
-                               app.width / 6, app.height / 20, text = "Go To Game",
-                               textFont = "Arial 20")
+                            app.width / 6, app.height / 20, text = "Go To Game",
+                            textFont = "Arial 20")
     
     app.player1Left = Button(app.width / 2 - app.width / 8,
                              app.height / 2 - app.height / 6 + app.height / 10 + 20,
@@ -152,20 +144,133 @@ def selectionAppStarted(app):
                               direct = -1, text = "", outlineWidth = 1)
 
     app.selectionBackButton = Button(app.width / 20, app.height / 30,
-                                app.width / 12, app.height / 20,
-                                text = "Back")
+                                     app.width / 12, app.height / 20,
+                                     text = "Back")
+
+
+    app.easyButton = Button(app.width / 2 - app.width / 5,
+                            app.height / 2 + app.height / 3,
+                            app.width / 5, app.height / 15,
+                            text = "Easy Mode")
+    
+    app.hardButton = Button(app.width / 2 + app.width / 5,
+                            app.height / 2 + app.height / 3,
+                            app.width / 5, app.height / 15,
+                            text = "Hard Mode")
+
+    app.selectionButtons = [app.gameButton, app.selectionBackButton,
+                            app.easyButton, app.hardButton]
 
     app.selectionArrowButtons = [app.player1Left, app.player1Right, app.player2Left,
                                  app.player2Right]
-    app.selectionButtons = [app.gameButton, app.selectionBackButton]
+
+def profileAppStarted(app):
+    app.profileDraw = ""
+    app.profileX = None
+    app.profileY = None
+    app.profileDrawing = False
+    app.pixelSize = 5
+
+    app.paletteIdx1 = 0
+    app.paletteIdx2 = 1
+    app.paletteIdx3 = 2
+
+    img = cv2.imread("canvas.jpeg")
+    scaledImg = cv2.resize(img, (app.width // 3, 2 * app.height // 5),
+                                   interpolation = cv2.INTER_LINEAR)
+    cv2.imwrite("default.jpg", scaledImg)
+
+    app.image = Image.new("RGB", (app.width // 3, 2 * app.height // 5), (255, 255, 255))
+
+    app.playerColorButton = DrawBox(app.width / 5, app.height / 3,
+                                    app.width / 3, 2 * app.height / 5,
+                                    text = "", bgColor = "")
+
+    app.updateUserButton = Button(app.width / 5, 3 * app.height / 5 + app.height / 15,
+                                  app.width / 4, app.height / 25,
+                                  text = "Update Username")
+
+    app.updatePassButton = Button(app.width / 5, 3 * app.height / 5 + 2 * app.height / 15,
+                                  app.width / 4, app.height / 25,
+                                  text = "Update Password")
+
+    app.profileBackButton = Button(app.width / 20, app.height / 30,
+                                   app.width / 12, app.height / 20,
+                                   text = "Back")
+
+    marginX = 45
+    marginY = 30
+    app.color1Button = Button(app.width / 5 - marginX, app.height / 3 - app.height / 5 - marginY,
+                              app.width / 20, app.height / 20, text = "",
+                              bgColor = app.colors[app.paletteIdx1], outlineWidth = 2)
+        
+    app.color2Button = Button(app.width / 5, app.height / 3 - app.height / 5 - marginY,
+                              app.width / 20, app.height / 20, text = "",
+                              bgColor = app.colors[app.paletteIdx2], outlineWidth = 2)
+        
+    app.color3Button = Button(app.width / 5 + marginX, app.height / 3 - app.height / 5 - marginY,
+                              app.width / 20, app.height / 20, text = "",
+                              bgColor = app.colors[app.paletteIdx3], outlineWidth = 2)
+
+    app.colorLeft = Button(app.width / 5 - 2 * marginX, app.height / 3 - app.height / 5 - marginY,
+                           app.width / 40, app.height / 40, text = "", direct = 1)
+    
+    app.colorRight = Button(app.width / 5 + 2 * marginX, app.height / 3 - app.height / 5 - marginY,
+                            app.width / 40, app.height / 40, text = "", direct = -1)
+
+    app.clearButton = Button(app.width / 5 + 3.5 * marginX, app.height / 3 - app.height / 5 - marginY,
+                             app.height / 20, app.height / 20, text = "X",
+                             outlineColor = "red", bgColor = "white", fill = "red")
+
+    app.profileButtons = [app.updateUserButton, app.updatePassButton, app.profileBackButton]
+    app.profileTriangleButtons = [app.colorLeft, app.colorRight]
+    app.profileCircleButtons = [app.color1Button, app.color2Button, app.color3Button]
+
+def updateUserAppStarted(app):
+    app.updateUserInvalidPass = False
+    app.newUserText = Text(app.width - app.width / 3, app.height / 3,
+                                       app.width / 3, app.height / 10,
+                                       text = "")
+
+    app.userPasswordConfirm = Text(app.width - app.width / 3, app.height / 2,
+                                    app.width / 3, app.height / 10,
+                                    text = "")
+
+    app.updateUserSubmitButton = Button(app.width / 2, app.height - app.height / 3,
+                                        app.width / 2, app.height / 15, text = "Update Username!")
+
+    app.updateUserExitButton = Button(app.width / 10, app.height / 5,
+                                      app.width / 20, app.height / 20,
+                                      text = "X", bgColor = "white", fill = "red")
+
+def updatePassAppStarted(app):
+    app.updatePassInvalidPass = False
+    app.updatePassWrongPass = False
+    app.passwordConfirmText = Text(app.width - app.width / 3, app.height / 3,
+                                   app.width / 3, app.height / 10,
+                                   text = "")
+
+    app.newPassText = Text(app.width - app.width / 3, app.height / 2,
+                           app.width / 3, app.height / 10,
+                           text = "")
+
+    app.updatePassSubmitButton = Button(app.width / 2, app.height - app.height / 3,
+                                        app.width / 2, app.height / 15, text = "Update Password!")
+
+    app.updatePassExitButton = Button(app.width / 10, app.height / 5,
+                                      app.width / 20, app.height / 20,
+                                      text = "X", bgColor = "white", fill = "red")
 
 def gameAppStarted(app):
     app.colors = ["White", "Black", "Green", "Blue", "Cyan", "Yellow", "Magenta",
-                  "Purple", "Dark Blue", "Orange", "Dark Green"]
+                  "Purple", "Orange", "Gold", "Lavender", "Maroon"]
     # declare the default board and chip colors
     app.baseColor = "gray"
 
-    app.boardColor = "green"
+    # app.gameBoardState = "2d"
+
+    app.boardColorDark = "green"
+    app.boardColorLight = "chartreuse4"
     app.colorIndex0 = 0
     app.colorIndex1 = 1
     app.color0 = app.colors[0]
@@ -178,8 +283,6 @@ def gameAppStarted(app):
     # declare default board size
     app.rows = 8
     app.cols = 8
-    app.hoverRow = None
-    app.hoverCol = None
 
     # declare board dimensions
     app.marginWidthLeft = app.width / 24
@@ -195,8 +298,12 @@ def gameAppStarted(app):
 
     # Sets the number of players playing
     app.playerCount = 1
+    app.player1Login = False
+    app.player2Login = False
     app.player1Name = "Player 1"
     app.player2Name = "Computer"
+    app.winner = None
+    app.loser = None
 
     # player 0 make first move
     app.playerTurn = 0
@@ -213,17 +320,46 @@ def gameAppStarted(app):
                             text = "?", bgColor = "white", fill = "black",
                             textFont = f"Arial {app.fontSize} bold")
 
+    app.placedRow = None
+    app.placedCol = None
     app.lastPlayedRow = None
     app.lastPlayedCol = None
+    app.hoverRow = None
+    app.hoverCol = None
+    app.legalSquareRowThick = None
+    app.legalSquareColThick = None
+
+    app.rx = 0
+    app.ry = 0
+    app.placeIncrements = 5
+    app.rxIncrement = app.boardWidth / (app.placeIncrements * app.cols * 2)
+    app.ryIncrement = app.boardHeight / (app.placeIncrements * app.rows * 2)
 
     app.flipPieces = []
     app.pieceFlip = False
     app.flipIncrements = 5
     app.dcol = 0
 
-    app.miniMaxDepth = 2
+    app.miniMaxDepth = 1
 
     app.gameButtons = [app.helpButton]
+
+def gameIsometricAppStarted(app):
+    app.diff = app.boardWidth / 3
+    app.diff2 = 50
+
+    app.p1 = (app.marginWidthLeft + app.diff, app.marginHeightTop + app.diff2)
+    app.p2 = (app.marginWidthLeft + app.boardWidth, app.marginHeightTop + app.diff)
+    app.p3 = (app.marginWidthLeft + app.boardWidth - app.diff, app.marginHeightTop + app.boardHeight - app.diff2)
+    app.p4 = (app.marginWidthLeft, app.marginHeightTop + app.boardHeight - app.diff)
+
+    app.slope1_2 = (app.p1[1] - app.p2[1]) / (app.p1[0] - app.p2[0])
+    app.slope1_4 = (app.p1[1] - app.p4[1]) / (app.p1[0] - app.p4[0])
+    app.slope2_3 = (app.p2[1] - app.p3[1]) / (app.p2[0] - app.p3[0])
+    app.slope3_4 = (app.p3[1] - app.p4[1]) / (app.p3[0] - app.p4[0])
+
+    app.slope1Increment2 = (app.p2[0] - app.p1[0]) / app.cols
+    app.slope2Increment2 = (app.p4[0] - app.p1[0]) / app.rows
 
 def helpAppStarted(app):
     app.slide1 = True
@@ -239,24 +375,29 @@ def helpAppStarted(app):
 def appStarted(app):
     # game starts at login screen 
     app.mode = "login"
-    
+    app.users = ast.literal_eval(readFile("userAndPass.txt"))
+
+    homeAppStarted(app)
+    gameAppStarted(app)
     loginAppStarted(app)
     loginVerificationAppStarted(app)
+    profileAppStarted(app)
+    updateUserAppStarted(app)
+    updatePassAppStarted(app)
     signUpAppStarted(app)
     confirmAppStarted(app)
-    homeAppStarted(app)
     selectionAppStarted(app)
-    gameAppStarted(app)
+    gameIsometricAppStarted(app)
     helpAppStarted(app)
     
     # Boolean State Variables
     app.gameOver = False
     app.error = False
     app.miniMax = True
+    app.tie = False
+    app.end = None
 
 ####################### BASIC IO #######################
-# From 15112 Class Notes Strings: Basic IO
-# Link: https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
 def readFile(path):
     with open(path, "rt") as f:
         return f.read()
@@ -269,26 +410,71 @@ def writeFile(path, contents):
 def game_timerFired(app):
     app.timerDelay = 50
     if(app.gameBoardObject.isGameOver(app, app.playerTurn)):
-        app.gameOver = True
+        gameEnding(app)
     elif(app.gameBoardObject.noMoreMovesPlayer(app.playerTurn)):
         app.playerTurn = 1 - app.playerTurn
         app.gameBoardObject.updateLegalSquares(app, app.playerTurn)
     elif(app.pieceFlip):
-        print("A")
-        app.mode = "gameAnimation"
-    print(app.computerTurn)
+        app.mode = "gameAnimationPlace"
     if(app.playerTurn == 1 and app.miniMax and app.computerTurn):
-        print("B")
         miniMax2(app, app.miniMaxDepth, app.miniMaxDepth, app.gameBoardObject,
                  app.gameBoardObject.getLegalSquares())
         app.computerTurn = False
-        app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
+    app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
 
-def gameAnimation_timerFired(app):
+def gameIsometric_timerFired(app):
+    if(app.placedRow != None and app.placedCol != None):
+        app.gameBoardObject.updateGameBoard(app, app.placedRow, 
+                                            app.placedCol, 1 - app.playerTurn)
+        app.lastPlayedRow = app.placedRow
+        app.lastPlayedCol = app.placedCol
+        app.placedRow, app.placedCol = None, None
+    for row, col in app.flipPieces:
+        app.gameBoard[row][col].setColor(1 - app.playerTurn)
+    app.gameBoardObject.updateLegalSquares(app, app.playerTurn)
+    app.flipPieces = []
+    app.computerTurn = True
+    game_timerFired(app)
+
+def home_timerFired(app):
+    app.timerDelay = 50
+    if(app.tellLogin):
+        if(app.drawErrorY < app.height / 25 and not app.flipDirection):
+            app.drawErrorY += app.height / 50
+        else:
+            app.flipDirection = True
+        if(app.drawErrorY > 0 and app.flipDirection and app.iteration1):
+            time.sleep(1)
+            app.drawErrorY -= app.height / 50
+            app.iteration1 = False
+        elif(app.drawErrorY > 0 and app.flipDirection):
+            app.drawErrorY -= app.height / 50
+        elif(app.flipDirection):
+            app.drawError = -1 * app.height / 12
+            app.tellLogin = False
+            app.flipDirection = False
+            app.iteration1 = True
+
+def gameAnimationPlace_timerFired(app):
+    app.timerDelay = 25
+    rowIncrement = app.boardHeight / app.rows
+    colIncrement = app.boardWidth / app.cols
+    if(app.rx + 15 < colIncrement or app.ry + 15 < rowIncrement):
+        app.rx += app.rxIncrement
+        app.ry += app.ryIncrement
+    else:
+        app.gameBoardObject.updateGameBoard(app, app.placedRow, 
+                                            app.placedCol, 1 - app.playerTurn)
+        app.lastPlayedRow = app.placedRow
+        app.lastPlayedCol = app.placedCol
+        app.rx = 0
+        app.ry = 0
+        app.mode = "gameAnimationFlip"
+
+def gameAnimationFlip_timerFired(app):
     app.timerDelay = 100
     for row, col in app.flipPieces:
             app.gameBoard[row][col].setColor(None)
-    print("D")
     app.dcol += app.boardWidth / (app.cols * app.flipIncrements)
     if(app.dcol + 2 >= app.boardWidth / app.cols):
         for row, col in app.flipPieces:
@@ -301,11 +487,12 @@ def gameAnimation_timerFired(app):
             app.computerTurn = True
 
 def help_timerFired(app):
+    app.timerDelay = 1500
     app.slide1 = not app.slide1
 ##################### USER INPUTS ######################
 def help_mousePressed(app, event):
     if(app.helpExitButton.isPressedCircle(event.x, event.y)):
-        app.mode = "game"
+        app.mode = app.prevScreen
 
 def game_mousePressed(app, event):
     if(app.dcol + 2 <= app.boardWidth / app.cols and app.pieceFlip):
@@ -314,23 +501,22 @@ def game_mousePressed(app, event):
     colWidth = app.boardWidth / app.cols
     if(app.helpButton.isPressedCircle(event.x, event.y)):
         app.mode = "help"
+        app.prevScreen = "game"
     
     # If clicked square is on board, get its row and col
-    if(isOnBoardXY(app, event.x, event.y)):
+    if(isOnBoardXY2d(app, event.x, event.y)):
         clickedRow = int((event.y - app.marginHeightTop) / rowWidth)
         clickedCol = int((event.x - app.marginWidthLeft) / colWidth)
     else:
         return
 
     # Checks if square is legal, then places chip and changes turn
-    if(isOnBoardXY(app, event.x, event.y) and
+    if(isOnBoardXY2d(app, event.x, event.y) and
        GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn)):
-        app.lastPlayedRow, app.lastPlayedCol = clickedRow, clickedCol
-        app.gameBoardObject.updateGameBoard(app, clickedRow, clickedCol, app.playerTurn)
-        print("C")
+        app.placedRow, app.placedCol = clickedRow, clickedCol
         app.pieceFlip = True
 
-        app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
+        # app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
         
         app.playerTurn = 1 - app.playerTurn       
         updatePlayerOutline(app)
@@ -338,14 +524,55 @@ def game_mousePressed(app, event):
         app.error = True
 
 def game_mouseMoved(app, event):
-    if(isOnBoardXY(app, event.x, event.y)):
+    if(isOnBoardXY2d(app, event.x, event.y)):
         rowWidth = app.boardHeight / app.rows 
         colWidth = app.boardWidth / app.cols
         app.hoverRow = int((event.y - app.marginHeightTop) / rowWidth)
         app.hoverCol = int((event.x - app.marginWidthLeft) / colWidth)
+        if((app.hoverRow, app.hoverCol) in app.gameBoardObject.getLegalSquares()):
+            app.legalSquareRowThick = app.hoverRow
+            app.legalSquareColThick = app.hoverCol
+        else:
+            app.legalSquareRowThick = None
+            app.legalSquareColThick = None
     else:
-        app.hoverRow, app.hoverCol = None, None
+        app.hoverRow = None
+        app.hoverCol = None
 
+def gameIsometric_mousePressed(app, event):
+    if(app.helpButton.isPressedCircle(event.x, event.y)):
+        app.mode = "help"
+        app.prevScreen = "gameIsometric"
+    if(not isOnBoardXYIsometric(app, event.x, event.y)):
+        return
+
+    clickedRow, clickedCol = getRowColIsometric(app, event.x, event.y)
+    if(GamePlay.GamePlay.legalSquare(app, app.gameBoard, clickedRow, clickedCol, app.playerTurn)):
+        app.lastPlayedRow, app.lastPlayedCol = clickedRow, clickedCol
+        app.gameBoardObject.updateGameBoard(app, clickedRow, clickedCol, app.playerTurn)
+
+        app.state, app.countColor0, app.countColor1 = getCounts(app, app.gameBoard)
+
+        app.playerTurn = 1 - app.playerTurn
+        updatePlayerOutline(app)
+    else:
+        app.error = True
+
+def gameIsometric_mouseReleased(app, event):
+    app.error = False
+
+def gameIsometric_mouseMoved(app, event):
+    if(isOnBoardXYIsometric(app, event.x, event.y)):
+        app.hoverRow, app.hoverCol = getRowColIsometric(app, event.x, event.y)
+        if((app.hoverRow, app.hoverCol) in app.gameBoardObject.getLegalSquares()):
+            app.legalSquareRowThick = app.hoverRow
+            app.legalSquareColThick = app.hoverCol
+        else:
+            app.legalSquareRowThick = None
+            app.legalSquareColThick = None
+    else:
+        app.hoverRow = None
+        app.hoverCol = None
 
 def updatePlayerOutline(app):
     if(app.playerTurn == 1):
@@ -365,34 +592,68 @@ def game_keyPressed(app, event):
     if(event.key == "r" and not app.gameOver):
         app.mode = "confirm"
         app.prevScreen = "game"
-    else:
+    elif(event.key == "i"):
+        app.mode = "gameIsometric"
+    elif(event.key == "r" and app.gameOver):
         appStarted(app)
+    
+def gameIsometric_keyPressed(app, event):
+    if(event.key == "i"):
+        app.mode = "game"
+    elif(event.key == "r" and not app.gameOver):
+        app.mode = "confirm"
+        app.prevScreen = "gameIsometric"
+    elif(event.key == "r"):
+        appStarted(app)
+
+def declarePlayerButtons(app):
+    app.mode = "game"
+    app.timerDelay = 50
+    colorFill0, colorFill1 = "black", "black"
+    if(app.color0 == "Black" or app.color0.find("Dark") != -1):
+        colorFill0 = "white"
+    if(app.color1 == "Black" or app.color1.find("Dark") != -1):
+        colorFill1 = "white"
+    
+    app.badNames = ["Player 1", "Player 2", "Computer"]
+    if(app.player1Name in app.badNames):
+        app.player1TurnButton = Text(app.width - app.marginWidthRight / 2, 
+                                    app.height / 3, app.marginWidthRight / 1.2, 
+                                    app.height / 4, text = app.player1Name, 
+                                    bgColor = app.color0, fill = colorFill0,
+                                    textFont = "Arial 26 bold underline")
+    else:
+        imgName = app.users[app.player1Name]["pic"]
+        img = app.loadImage(imgName)
+        img2 = app.scaleImage(img, 15/24)
+        app.player1TurnButton = Text(app.width - app.marginWidthRight / 2, 
+                                    app.height / 3,app.marginWidthRight / 1.2, 
+                                    app.height / 4, text = app.player1Name, 
+                                    bgColor = app.color0, fill = colorFill0,
+                                    image = img2, textFont = "Arial 26 bold underline")
+    
+    if(app.player2Name in app.badNames):
+        app.player2TurnButton = Text(app.width - app.marginWidthRight / 2, 
+                                        app.height - app.height / 3,
+                                        app.marginWidthRight / 1.2, app.height / 4,
+                                        text = app.player2Name, bgColor = app.color1,
+                                        fill = colorFill1, textFont = "Arial 26 bold underline")
+    else:
+        imgName = app.users[app.player2Name]["pic"]
+        img = app.loadImage(imgName)
+        img2 = app.scaleImage(img, 15/24)
+        app.player2TurnButton = Text(app.width - app.marginWidthRight / 2, 
+                                    2 * app.height / 3, app.marginWidthRight / 1.2, 
+                                    app.height / 4, text = app.player2Name, 
+                                    bgColor = app.color1, fill = colorFill1,
+                                    image = img2, textFont = "Arial 26 bold underline")
+
+    app.player1TurnButton.updateIsClicked(True)
+    app.player1TurnButton.updateOutline()
 
 def selection_mousePressed(app, event):
     if(app.gameButton.isPressedRectangle(event.x, event.y)):
-        app.mode = "game"
-        app.timerDelay = 50
-        colorFill0, colorFill1 = "black", "black"
-        if(app.color0 == "Black" or app.color0.find("Dark") != -1):
-            colorFill0 = "white"
-        if(app.color1 == "Black" or app.color1.find("Dark") != -1):
-            colorFill1 = "white"
-
-        app.player1TurnButton = Text(app.width - app.marginWidthRight / 2, 
-                                     app.height / 3,
-                                     app.marginWidthRight / 1.2, app.height / 4,
-                                     text = app.player1Name, bgColor = app.color0,
-                                     fill = colorFill0)
-
-        app.player2TurnButton = Text(app.width - app.marginWidthRight / 2, 
-                                     app.height - app.height / 3,
-                                     app.marginWidthRight / 1.2, app.height / 4,
-                                     text = app.player2Name, bgColor = app.color1,
-                                     fill = colorFill1)
-
-        app.player1TurnButton.updateIsClicked(True)
-        app.player1TurnButton.updateOutline()
-
+        declarePlayerButtons(app)
     elif(app.player1Left.isPressedTriangle(event.x, event.y)):
         app.colorIndex0 -= 1
         app.colorIndex0 %= len(app.colors)
@@ -423,6 +684,14 @@ def selection_mousePressed(app, event):
         app.color1 = app.colors[app.colorIndex1]
     elif(app.selectionBackButton.isPressedRectangle(event.x, event.y)):
         app.mode = "home"
+    elif(app.easyButton.isPressedRectangle(event.x, event.y) and app.player2Name == "Computer"):
+        app.miniMaxDepth = -1
+        app.mode = "game"
+        declarePlayerButtons(app)
+    elif(app.hardButton.isPressedRectangle(event.x, event.y) and app.player2Name == "Computer"):
+        app.miniMaxDepth = 3
+        app.mode = "game"
+        declarePlayerButtons(app)
 
 def selection_mouseMoved(app, event):
     for button in app.selectionButtons:
@@ -437,11 +706,246 @@ def selection_mouseMoved(app, event):
         else:
             arrow.updateColor("gray")
 
-def confirm_mousePressed(app, event):
+def confirm_mouseMoved(app, event):
     if(app.confirmButton.isPressedRectangle(event.x, event.y)):
+        app.confirmButton.updateColor = "dark gray"
+    else:
+        app.confirmButton.updateColor = "gray"
+    
+    if(app.confirmExitButton.isPressedCircle(event.x, event.y)):
+        app.confirmExitButton.updateColor = "gray75"
+    else:
+        app.confirmExitButton.updateColor = "white"
+
+def confirm_mousePressed(app, event):
+    app.badNames = ["Player 1", "Player 2", "Computer"]
+    if(app.confirmButton.isPressedRectangle(event.x, event.y)):
+        if(app.playerTurn == 0):
+            if(app.player1Name not in app.badNames):
+                loser = app.player1Name
+            else:
+                loser = None
+            if(app.player2Name not in app.badNames):
+                winner = app.player2Name
+            else:
+                winner = None
+        else:
+            if(app.player1Name not in app.badNames):
+                winner = app.player1Name
+            else:
+                winner = None
+            if(app.player2Name not in app.badNames):
+                loser = app.player2Name
+            else:
+                loser = None
+
+        if(loser != None):
+            app.users[loser]["played"] += 1
+        if(winner != None):
+            app.users[winner]["played"] += 1
+            app.users[winner]["wins"] += 1
         appStarted(app)
     elif(app.confirmExitButton.isPressedCircle(event.x, event.y)):
         app.mode = app.prevScreen
+
+def profile_mousePressed(app, event):
+    if(app.updateUserButton.isPressedRectangle(event.x, event.y)):
+        app.mode = "updateUser"
+    elif(app.updatePassButton.isPressedRectangle(event.x, event.y)):
+        app.mode = "updatePass"
+    elif(app.profileBackButton.isPressedRectangle(event.x, event.y)):
+        name = app.users[app.player1Name]["pic"]
+        updatedImg = cv2.cvtColor(np.array(app.img), cv2.COLOR_RGB2BGR)
+        cv2.imwrite(name, updatedImg)
+        writeFile("userAndPass.txt", repr(app.users))
+        app.mode = "home"
+    elif(app.color1Button.isPressedCircle(event.x, event.y)):
+        app.playerColorButton.updateColor(app.colors[app.paletteIdx1])
+    elif(app.color2Button.isPressedCircle(event.x, event.y)):
+        app.playerColorButton.updateColor(app.colors[app.paletteIdx2])
+    elif(app.color3Button.isPressedCircle(event.x, event.y)):
+        app.playerColorButton.updateColor(app.colors[app.paletteIdx3])
+    elif(app.colorLeft.isPressedTriangle(event.x, event.y)):
+        app.paletteIdx1 += 1
+        app.paletteIdx2 += 1
+        app.paletteIdx3 += 1
+        if(app.paletteIdx1 >= len(app.colors)):
+            app.paletteIdx1 %= len(app.colors)
+        elif(app.paletteIdx2 >= len(app.colors)):
+            app.paletteIdx2 %= len(app.colors)
+        elif(app.paletteIdx3 >= len(app.colors)):
+            app.paletteIdx3 %= len(app.colors)
+    elif(app.colorRight.isPressedTriangle(event.x, event.y)):
+        app.paletteIdx1 -= 1
+        app.paletteIdx2 -= 1
+        app.paletteIdx3 -= 1
+        if(app.paletteIdx1 < 0):
+            app.paletteIdx1 %= len(app.colors)
+        elif(app.paletteIdx2 < 0):
+            app.paletteIdx2 %= len(app.colors)
+        elif(app.paletteIdx3 < 0):
+            app.paletteIdx3 %= len(app.colors)
+    elif(app.clearButton.isPressedRectangle(event.x, event.y)):
+        app.img = app.loadImage("default.jpg")
+        
+    
+    app.color1Button.updateColor(app.colors[app.paletteIdx1])
+    app.color2Button.updateColor(app.colors[app.paletteIdx2])
+    app.color3Button.updateColor(app.colors[app.paletteIdx3])
+
+
+def profile_mouseDragged(app, event):
+    if(app.playerColorButton.isPressedRectangle(event.x, event.y)):
+        app.timerDelay = 10
+        app.drawingX = event.x
+        app.drawingY = event.y
+        app.playerColorButton.updateDrawing(app, event.x, event.y)
+
+def profile_mouseMoved(app, event):
+    sideLen = app.width / 2
+    app.profileX = event.x
+    app.profileY = event.y
+    if(app.winsButton.isPressedArc(event.x, event.y)):
+        app.winsButton.updateLens(sideLen + 40)
+        app.lossButton.updateLens(sideLen)
+        app.tieButton.updateLens(sideLen)
+        app.profileDraw = "win"
+    elif(app.lossButton.isPressedArc(event.x, event.y)):
+        app.lossButton.updateLens(sideLen + 40)
+        app.winsButton.updateLens(sideLen)
+        app.tieButton.updateLens(sideLen)
+        app.profileDraw = "loss"
+    elif(app.tieButton.isPressedArc(event.x, event.y)):
+        app.tieButton.updateLens(sideLen + 40)
+        app.winsButton.updateLens(sideLen)
+        app.lossButton.updateLens(sideLen)
+        app.profileDraw = "tie"  
+    else:
+        app.lossButton.updateLens(sideLen)
+        app.winsButton.updateLens(sideLen)
+        app.tieButton.updateLens(sideLen)
+        app.profileDraw = ""
+    
+    for button in app.profileButtons:
+        if(button.isPressedRectangle(event.x, event.y)):
+            button.updateColor("dark gray")
+        else:
+            button.updateColor("gray")
+    
+    if(app.clearButton.isPressedRectangle(event.x, event.y)):
+        app.clearButton.updateColor("gray80")
+    else:
+        app.clearButton.updateColor("white")
+
+    for button in app.profileTriangleButtons:
+        if(button.isPressedTriangle(event.x, event.y)):
+            button.updateColor("dark gray")
+        else:
+            button.updateColor("gray")
+    
+    for button in app.profileCircleButtons:
+        if(button.isPressedCircle(event.x, event.y)):
+            button.updateOutline("red")
+        else:
+            button.updateOutline("black")
+
+def updateUser_mouseMoved(app, event):
+    if(app.updateUserSubmitButton.isPressedRectangle(event.x, event.y)):
+        app.updateUserSubmitButton.updateColor("dark gray")
+    else:
+        app.updateUserSubmitButton.updateColor("gray")
+
+    if(app.updateUserExitButton.isPressedCircle(event.x, event.y)):
+        app.updateUserExitButton.updateColor("gray75")
+    else:
+        app.updateUserExitButton.updateColor("white")
+
+def updateUser_keyPressed(app, event):
+    if(app.newUserText.getIsClicked()):
+        action = getAction(event.key)
+        if(isinstance(action, bool)):
+            app.newUserText.updateIsClicked(action)
+        else:
+            app.newUserText.updateText(action)
+    elif(app.userPasswordConfirm.getIsClicked()):
+        action = getAction(event.key)
+        if(isinstance(action, bool)):
+            app.userPasswordConfirm.updateIsClicked(action)
+        else:
+            app.userPasswordConfirm.updateText(action)
+
+def updateUser_mousePressed(app, event):
+    if(app.newUserText.isPressedRectangle(event.x, event.y)):
+        app.newUserText.updateIsClicked(True)
+        app.userPasswordConfirm.updateIsClicked(False)
+    elif(app.userPasswordConfirm.isPressedRectangle(event.x, event.y)):
+        app.userPasswordConfirm.updateIsClicked(True)
+        app.newUserText.updateIsClicked(False)
+    elif(app.updateUserExitButton.isPressedCircle(event.x, event.y)):
+        app.mode = "profile"
+        clearTextBoxes(app)
+    elif(app.updateUserSubmitButton.isPressedRectangle(event.x, event.y)):
+        newUser = app.newUserText.getText()
+        password = app.userPasswordConfirm.getText()
+        if(password == app.users[app.player1Name]["password"]):
+            app.users[newUser] = app.users[app.player1Name]
+            del app.users[app.player1Name]
+            app.player1Name = newUser
+            writeFile("userAndPass.txt", repr(app.users))
+            app.updateUserInvalidPass = False
+            app.mode = "profile"
+        else:
+            app.updateUserInvalidPass = True
+
+def updatePass_mouseMoved(app, event):
+    if(app.updatePassSubmitButton.isPressedRectangle(event.x, event.y)):
+        app.updatePassSubmitButton.updateColor("dark gray")
+    else:
+        app.updatePassSubmitButton.updateColor("gray")
+
+    if(app.updatePassExitButton.isPressedCircle(event.x, event.y)):
+        app.updatePassExitButton.updateColor("gray75")
+    else:
+        app.updatePassExitButton.updateColor("white")
+
+def updatePass_keyPressed(app, event):
+    if(app.passwordConfirmText.getIsClicked()):
+        action = getAction(event.key)
+        if(isinstance(action, bool)):
+            app.passwordConfirmText.updateIsClicked(action)
+        else:
+            app.passwordConfirmText.updateText(action)
+    elif(app.newPassText.getIsClicked()):
+        action = getAction(event.key)
+        if(isinstance(action, bool)):
+            app.newPassText.updateIsClicked(action)
+        else:
+            app.newPassText.updateText(action)
+
+def updatePass_mousePressed(app, event):
+    if(app.passwordConfirmText.isPressedRectangle(event.x, event.y)):
+        app.passwordConfirmText.updateIsClicked(True)
+        app.newPassText.updateIsClicked(False)
+    elif(app.newPassText.isPressedRectangle(event.x, event.y)):
+        app.newPassText.updateIsClicked(True)
+        app.passwordConfirmText.updateIsClicked(False)
+    elif(app.loginExitButton.isPressedCircle(event.x, event.y)):
+        app.mode = "profile"
+        clearTextBoxes(app)
+    elif(app.submitLoginButton.isPressedRectangle(event.x, event.y)):
+        password = app.passwordConfirmText.getText()
+        newPass = app.newPassText.getText()
+        if(password == app.users[app.player1Name]["password"]):
+            if(isValidPassword(app, newPass)):
+                app.users[app.player1Name]["password"] = newPass
+                writeFile("userAndPass.txt", repr(app.users))
+                app.mode = "profile"
+                app.updatePassInvalidPass = False
+                app.updatePassWrongPass = False
+            else:
+                app.updatePassInvalidPass = True
+        else:
+            app.updatePassWrongPass = True
 
 def home_keyPressed(app, event):
     if(event.key == "r"):
@@ -460,6 +964,14 @@ def home_mousePressed(app, event):
         app.miniMax = True
     elif(app.homeBackButton.isPressedRectangle(event.x, event.y)):
         app.mode = "login"
+    elif(app.profileButton.isPressedRectangle(event.x, event.y)):
+        if(app.player1Login):
+            Draw.Profile.createStatsButtons(app)
+            app.mode = "profile"
+            name = app.users[app.player1Name]["pic"]
+            app.img = app.loadImage(name)
+        else:
+            app.tellLogin = True
 
 def home_mouseMoved(app, event):
     for button in app.homeButtons:
@@ -470,10 +982,25 @@ def home_mouseMoved(app, event):
 
 def clearTextBoxes(app):
     textBoxes = [app.userNameInput, app.passwordInput, app.signUpName, 
-                 app.signUpUserName, app.signUpPassword]
+                 app.signUpUserName, app.signUpPassword, app.newUserText,
+                 app.userPasswordConfirm, app.passwordConfirmText, app.newPassText]
 
     for text in textBoxes:
         text.clearText()
+
+def loginVerify_mouseMoved(app, event):
+    for button in app.loginVerificationButtons:
+        if(button.isPressedRectangle(event.x, event.y)):
+            button.updateColor("dark gray")
+        else:
+            button.updateColor("gray")
+
+    for button in app.loginVerificationCircleButtons:
+        if(button.isPressedCircle(event.x, event.y)):
+            button.updateColor("gray64")
+        else:
+            button.updateColor("white")
+
 
 def loginVerify_mousePressed(app, event):
     if(app.userNameInput.isPressedRectangle(event.x, event.y)):
@@ -488,16 +1015,19 @@ def loginVerify_mousePressed(app, event):
     elif(app.submitLoginButton.isPressedRectangle(event.x, event.y)):
         user = app.userNameInput.getText()
         password = app.passwordInput.getText()
-        # From 112 Class Notes: Strings
-        # Link: https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
-        users = ast.literal_eval(readFile("userAndPass.txt"))
-        if(user in users and password == users[user]["password"]):
+        app.users = ast.literal_eval(readFile("userAndPass.txt"))
+        if(user in app.users and password == app.users[user]["password"]):
             if(app.playerCount == 2):
-                app.mode = "selection"
-                app.player2Name = user
+                if(user == app.player1Name):
+                    app.loginError = True
+                else:
+                    app.mode = "selection"
+                    app.player2Name = user
+                    app.player2Login = True
             else:
                 app.mode = "home"
                 app.player1Name = user
+                app.player1Login = True
         else:
             app.loginError = True
 
@@ -534,8 +1064,6 @@ def loginVerify_keyPressed(app, event):
             app.passwordInput.updateText(action)
 
 def isValidPassword(app, password):
-    if(len(password) < 4):
-        return False
     app.num = False
     app.letter = False
     app.upper = False
@@ -549,7 +1077,6 @@ def isValidPassword(app, password):
                 app.lower = True
         elif(letter.isdigit()):
             app.num = True
-
     return app.num and app.letter and app.upper and app.lower
 
 def makeTrueSignUp(app, element):
@@ -572,32 +1099,43 @@ def signup_mousePressed(app, event):
         password = app.signUpPassword.getText()
         if(not isValidPassword(app, password)):
             app.invalidPassword = True
-        # REFERENCE: 112 Class Notes: Strings
-        # Link: https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
-        users = ast.literal_eval(readFile("userAndPass.txt"))
-        if(user in users):
+        app.users = ast.literal_eval(readFile("userAndPass.txt"))
+        if(user in app.users or user in ["Player 1", "Player 2", "Computer"]):
             app.signUpTakenUser = True
         elif(isValidPassword(app, password)):
+            num = random.randint(0, 100000000000)
+            img = cv2.imread("default.jpg")
+            name = str(num) + ".jpg"
+            cv2.imwrite(name, img)
             personAttributes = {
                 "name": app.signUpName.getText(),
                 "username": user,
                 "password": password,
                 "wins" : 0,
-                "h2h" : {}
+                "ties" : 0,
+                "played" : 0,
+                "history" : [],
+                "h2h" : {},
+                "pic" : name
             }
-            users[user] = personAttributes
-            writeFile("userAndPass.txt", repr(users))
+            app.users[user] = personAttributes
+            writeFile("userAndPass.txt", repr(app.users))
             if(app.playerCount == 2):
                 app.mode = "selection"
                 app.player2Name = user
+                app.player2Login = True
             else:
                 app.player1Name = user
                 app.mode = "home"
+                app.player1Login = True
 
             clearTextBoxes(app)
     else:
         makeTrueSignUp(app, -1)
 
+def game2_keyPressed(app, event):
+    if(event.key == "r"):
+        appStarted(app)
 
 def signup_keyPressed(app, event):
     if(app.signUpUserName.getIsClicked()):
@@ -626,9 +1164,9 @@ def signup_mouseMoved(app, event):
         app.submitSignUpButton.updateColor("gray")
     
     if(app.signUpExitButton.isPressedCircle(event.x, event.y)):
-        app.signUpExitButton.updateColor("magenta2")
+        app.signUpExitButton.updateColor("gray64")
     else:
-        app.signUpExitButton.updateColor("red")
+        app.signUpExitButton.updateColor("white")
 
 def login_mousePressed(app, event):
     if(app.loginButton.isPressedRectangle(event.x, event.y)):
@@ -651,37 +1189,32 @@ def login_mouseMoved(app, event):
         else:
             button.updateColor("gray")
 ##################### UPDATE GAME #######################
-# REFERENCES
-# https://en.wikipedia.org/wiki/minimax
-# https://en.wikipedia.org/wiki/Alpha–beta_pruning
-# https://www.youtube.com/watch?v=l-hh51ncgDI
-# 112 Fundamentals of Game AI
-# ^^ Link: https://www.cs.cmu.edu/~112/notes/student-tp-guides/GameAI.pdf
-# TA Lecture on Game AI
-# ^^ Link: https://docs.google.com/presentation/d/1GVwRIISX0RA4_jvgF90kZZUG_soZUS6P4FFutYwQ39M/edit#slide=id.g35f391192_00
+# MINIMAX
 def computerMakeMove(app, board, move):
-    # time.sleep(0.7)
-    board.updateGameBoard(app, move[0], move[1], 1)
-    app.pieceFlip = True
-    app.lastPlayedRow = move[0]
-    app.lastPlayedCol = move[1]
+    if(app.mode == "game"):
+        app.pieceFlip = True
+    app.placedRow = move[0]
+    app.placedCol = move[1]
     app.playerTurn = 0
-    board.updateLegalSquares(app, app.playerTurn)
     updatePlayerOutline(app)
 
 def miniMax2(app, depth, refDepth, board, legalSquares,
-             alpha = -1000, beta = 1000, isComputerTurn = True):
+             alpha = -1000, beta = 1000, isComputerTurn = True, minimize = False):
+    moves = []
     if(depth == 0 or board.isGameOver(app, int(isComputerTurn))):
         return getState(app, board.getBoard())
+    if(depth == -1):
+        minimize = True
+        depth = 1
+        refDepth = 1
 
     # Computer wants to maximize game score
     if(isComputerTurn):
         boardScore = -1 * app.rows * app.cols - 1
         move = None
-        for row, col in legalSquares:
-            
+        for row, col in legalSquares:   
             simulatedBoard = Board.Board(board.getRows(),
-                                         board.getCols(),
+                                         board.getCols(), flip = True,
                                          board = copy.deepcopy(board.getBoard()))
 
             simulatedBoard.updateGameBoard(app, row, col, int(isComputerTurn))
@@ -690,6 +1223,10 @@ def miniMax2(app, depth, refDepth, board, legalSquares,
             result = miniMax2(app, depth - 1, refDepth, simulatedBoard,
                               simulatedBoard.getLegalSquares(),
                               alpha, beta, not isComputerTurn)
+            
+            if(depth == refDepth):
+                moves.append([result, (row, col)])
+
             if(result >= boardScore):
                 boardScore = result
                 move = (row, col)
@@ -706,7 +1243,7 @@ def miniMax2(app, depth, refDepth, board, legalSquares,
         for row, col in legalSquares:
             
             simulatedBoard = Board.Board(board.getRows(),
-                                         board.getCols(),
+                                         board.getCols(), flip = True,
                                          board = copy.deepcopy(board.getBoard()))
 
             simulatedBoard.updateGameBoard(app, row, col, int(isComputerTurn))
@@ -726,12 +1263,19 @@ def miniMax2(app, depth, refDepth, board, legalSquares,
             if(beta <= alpha):
                 break
 
-    if(move != None and depth == refDepth):
+    if(move != None and depth == refDepth and minimize):
+        moves.sort()
+        computerMakeMove(app, board, moves[0][1])
+    elif(move != None and depth == refDepth):
         computerMakeMove(app, board, move)
 
     return boardScore
 
 #################### STATE FUNCTIONS ####################
+def print2dList(L):
+    for i in L:
+        print(i)
+
 def getCounts(app, board):
     state, countColor0, countColor1 = 0, 0, 0
     for i in range(app.rows):
@@ -769,12 +1313,72 @@ def oneHotEncoding(app, group, element, func, trueState, falseState):
         else:
             func(i, falseState)
 
-################## CHECKING FUNCTIONS ###################
-def isOnBoardXY(app, x, y):
+def gameEnding(app):
+    app.gameOver = True
+    if(app.countColor0 > app.countColor1 and app.player1Login):
+        app.users[app.player1Name]["wins"] += 1
+        app.users[app.player1Name]["played"] += 1
+        if(app.player2Login):
+            app.users[app.player2Name]["played"] += 1
+    elif(app.countColor0 < app.countColor1 and app.player2Login):
+        app.users[app.player2Name]["wins"] += 1
+        app.users[app.player2Name]["played"] += 1
+        if(app.player1Login):
+            app.users[app.player1Name]["played"] += 1
+    else:
+        if(app.player1Login):
+            app.users[app.player1Name]["ties"] += 1
+            app.users[app.player1Name]["played"] += 1
+        if(app.player2Login):
+            app.users[app.player2Name]["ties"] += 1
+            app.users[app.player2Name]["played"] += 1
+    
+    writeFile("userAndPass.txt", repr(app.users))
+    if(app.mode == "game"):
+        app.end = True
+    else:
+        app.end = False
+    app.mode = "game2"
+
+################## CHECKING AND GETTING FUNCTIONS ###################
+def isOnBoardXY2d(app, x, y):
     if(x > app.marginWidthLeft and y > app.marginHeightTop and 
        x < app.width - app.marginWidthRight and y < app.height - app.marginHeightBottom):
         return True
     return False
+
+def isOnBoardXYIsometric(app, x, y):
+    if(x >= app.p1[0]):
+        projY1 = app.slope1_2 * (x - app.p1[0]) + app.p1[1]
+    else:
+        projY1 = app.slope1_4 * (x - app.p1[0]) + app.p1[1]
+    
+    if(x >= app.p3[0]):
+        projY2 = app.slope2_3 * (x - app.p3[0]) + app.p3[1]
+    else:
+        projY2 = app.slope3_4 * (x - app.p3[0]) + app.p3[1]
+    
+    if(y > projY1 and y < projY2):
+        return True
+    return False
+
+def getRowColIsometric(app, x, y):
+    row, col = None, None
+    for c in range(1, app.cols + 1):
+        point = (app.p1[0] + app.slope1Increment2 * c, app.p1[1] + app.slope1Increment2 * app.slope1_2 * c)
+        projY = app.slope1_4 * (x - point[0]) + point[1]
+        if(y <= projY):
+            col = c - 1
+            break
+
+    for r in range(1, app.rows + 1):
+        point = (app.p1[0] + app.slope2Increment2 * r, app.p1[1] + app.slope2Increment2 * app.slope1_4 * r)
+        projX = (1 / app.slope1_2) * (y - point[1]) + point[0]
+        if(x >= projX):
+            row = r - 1
+            break
+
+    return row, col
 
 ######################## REDRAW ALL ########################
 def signup_redrawAll(app, canvas):
@@ -802,16 +1406,35 @@ def confirm_redrawAll(app, canvas):
         home_redrawAll(app, canvas)
     elif(app.prevScreen == "game"):
         game_redrawAll(app, canvas)
+    elif(app.prevScreen == "gameIsometric"):
+        Draw.Game.drawIsometricBoard(app, canvas)
+        Draw.Game.drawChipsIsometric(app, canvas)
+        Draw.Game.drawScore(app, canvas)
+        Draw.Game.drawGameButtons(app, canvas)
+        Draw.Game.drawError(app, canvas)
+        if(app.gameOver):
+            Draw.Game.drawGameOver(app, canvas)
     
     Draw.Confirm.drawConfirm(app, canvas)
 
 def selection_redrawAll(app, canvas):
     Draw.Selection.drawSelectionPage(app, canvas)
 
-def gameAnimation_redrawAll(app, canvas):
-    Draw.Game.drawBoard(app, canvas)
+def gameAnimationPlace_redrawAll(app, canvas):
+    Draw.Game.draw2dBoard(app, canvas)
     Draw.Game.drawLegalSquares(app, canvas)
-    Draw.Game.drawChips(app, canvas)
+    Draw.Game.drawChips2d(app, canvas)
+    Draw.Game.drawScore(app, canvas)
+    Draw.Game.drawGameButtons(app, canvas)
+    Draw.Game.drawError(app, canvas)
+    Draw.Animate.animatePlacePiece(app, canvas)
+    if(app.gameOver):
+        Draw.Game.drawGameOver(app, canvas)
+
+def gameAnimationFlip_redrawAll(app, canvas):
+    Draw.Game.draw2dBoard(app, canvas)
+    Draw.Game.drawLegalSquares(app, canvas)
+    Draw.Game.drawChips2d(app, canvas)
     Draw.Game.drawScore(app, canvas)
     Draw.Game.drawGameButtons(app, canvas)
     Draw.Game.drawError(app, canvas)
@@ -820,17 +1443,59 @@ def gameAnimation_redrawAll(app, canvas):
         Draw.Game.drawGameOver(app, canvas)
 
 def game_redrawAll(app, canvas):
-    Draw.Game.drawBoard(app, canvas)
+    Draw.Game.draw2dBoard(app, canvas)
     Draw.Game.drawLegalSquares(app, canvas)
-    Draw.Game.drawChips(app, canvas)
+    Draw.Game.drawChips2d(app, canvas)
     Draw.Game.drawScore(app, canvas)
     Draw.Game.drawGameButtons(app, canvas)
     Draw.Game.drawError(app, canvas)
     if(app.gameOver):
         Draw.Game.drawGameOver(app, canvas)
 
+def gameIsometric_redrawAll(app, canvas):
+    Draw.Game.drawIsometricBoard(app, canvas)
+    Draw.Game.drawLegalSquares(app, canvas)
+    Draw.Game.drawChipsIsometric(app, canvas)
+    Draw.Game.drawScore(app, canvas)
+    Draw.Game.drawGameButtons(app, canvas)
+    Draw.Game.drawError(app, canvas)
+    if(app.gameOver):
+        Draw.Game.drawGameOver(app, canvas)
+
+def game2_redrawAll(app, canvas):
+    if(app.end):
+        game_redrawAll(app, canvas)
+    else:
+        gameIsometric_redrawAll(app, canvas)
+
+def profile_redrawAll(app, canvas):
+    Draw.Profile.drawProfilePage(app, canvas)
+    Draw.Profile.drawDrawing(app, canvas)
+    Draw.Profile.drawButtons(app, canvas)
+    Draw.Profile.drawStats(app, canvas)
+    if(app.profileDraw != ""):
+        Draw.Profile.drawStatsText(app, canvas, app.profileDraw, app.profileX, app.profileY)
+
+def updateUser_redrawAll(app, canvas):
+    profile_redrawAll(app, canvas)
+    Draw.updateUser.drawUpdateUserPage(app, canvas)
+    if(app.updateUserInvalidPass):
+        Draw.updatePass.drawInvalidPassword(app, canvas)
+
+def updatePass_redrawAll(app, canvas):
+    profile_redrawAll(app, canvas)
+    Draw.updatePass.drawUpdatePassPage(app, canvas)
+    if(app.updatePassInvalidPass):
+        Draw.updatePass.drawInvalidPassword(app, canvas)
+
+    if(app.updatePassWrongPass):
+        Draw.updatePass.drawIncorrectPassword(app, canvas)
+
 def help_redrawAll(app, canvas):
-    game_redrawAll(app, canvas)
+    if(app.prevScreen == "game"):
+        game_redrawAll(app, canvas)
+    elif(app.prevScreen == "gameIsometric"):
+        gameIsometric_redrawAll(app, canvas)
     Draw.Help.drawRulesPage(app, canvas)
     Draw.Help.drawMiniBoard(app, canvas)
     Draw.Help.drawHelpButtons(app, canvas)
